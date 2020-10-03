@@ -24,15 +24,17 @@ int main(int argc, char* argv[]){
 	char *file_in, read_char, buf[MAX_STRING_LENGTH], *needle, *start_strstr;
 	int nread, fd, i, outfd;
 	
-	if (argc != 3){ 
-		perror(" numero di argomenti sbagliato");
+	if(argc == 3){
+		file_in = argv[2];
+		fd = open(file_in, O_RDONLY);
+	}else if(argc == 2){
+		fd = 0;
+	}else{
+		perror("numero argomenti sbagliato");
 		exit(1);
-	} 
-	
+	}
+
 	needle = argv[1];
-	
-	file_in = argv[2];
-	fd = open(file_in, O_RDONLY);
 	outfd = 1;
 	if (fd<0){
 		perror("P0: Impossibile aprire il file.");

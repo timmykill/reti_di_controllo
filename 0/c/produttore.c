@@ -25,7 +25,9 @@ int main(int argc, char* argv[]){
 		printf("Inserisci la nuova riga\n");
 		ret = gets(riga); 
 		riga[strlen(riga)+1]='\0';  
-		riga[strlen(riga)]='\n';  
+		if(ret){
+			riga[strlen(riga)]='\n';	
+		}
 		written = write(fd, riga, strlen(riga));
 		if (written < 0){
 			perror("P0: errore nella scrittura sul file");

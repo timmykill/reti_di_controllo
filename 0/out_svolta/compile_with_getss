@@ -1,1 +1,0 @@
-gcc consumatore.c -std=c99 -Wno-deprecated-declarations -o consumatore
