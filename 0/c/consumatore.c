@@ -6,15 +6,12 @@
 #define MAX_STRING_LENGTH 256
 
 //https://en.wikipedia.org/wiki/Tail_call#C_example
-void multiple_strstr(char * haystack, char* needle, int outfd){
+void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd){
 	char * start_strstr;
-	int haylen, needlen;
 	start_strstr = strstr(haystack, needle);
-	haylen = strlen(haystack);
-	needlen = strlen(needle);
 	if (start_strstr){
 		write(outfd, haystack, start_strstr - haystack);
-		multiple_strstr(start_strstr + needlen, needle, outfd);
+		multiple_strstr(start_strstr + needlen, haylen - ((start_strstr - haystack) + needlen) ,needle, needlen, outfd);
 	} else {
 		write(outfd, haystack, haylen);
 	}
@@ -46,7 +43,7 @@ int main(int argc, char* argv[]){
 			buf[i] = read_char;
 			if (read_char == '\n'){
 				buf[i+1] = '\0';
-				multiple_strstr(buf, needle, outfd);
+				multiple_strstr(buf, strlen(buf), needle, strlen(needle), outfd);
 				i=-1;
 			}
 		} else {
