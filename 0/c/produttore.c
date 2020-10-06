@@ -6,7 +6,7 @@
 #define MAX_STRING_LENGTH 256
 
 int main(int argc, char* argv[]){
-	int fd, written;
+	int fd, written,riga_len;
 	char *file_out,*ret;
 	char riga[MAX_STRING_LENGTH];
 	
@@ -24,14 +24,15 @@ int main(int argc, char* argv[]){
 		printf("Inserisci la nuova riga\n");
 		ret = gets(riga);
 		if(ret){
-			riga[strlen(riga)+1]='\0';
-			riga[strlen(riga)]='\n';
-	                written = write(fd, riga, strlen(riga));
+			riga_len=strlen(riga);
+			riga[riga_len+1]='\0';
+			riga[riga_len]='\n';
+	                written = write(fd, riga, riga_len);
 	                if (written < 0){
 	                        perror("P0: errore nella scrittura sul file");
 	                        exit(3);
 	                }
 		}
-	} while (ret);	
+	} while (ret);
 	close(fd);
 }
