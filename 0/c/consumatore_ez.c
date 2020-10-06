@@ -9,7 +9,7 @@
 // consumatore.c e' un filtro
 int main(int argc, char* argv[]){
 
-	char *file_in, read_char, buf[MAX_STRING_LENGTH], *filtered;
+	char *file_in, read_char, *filtered;
 	int nread, fd, filterlen, i;
 	bool is_filtered;
 
@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
 		file_in = argv[2];
 		fd = open(file_in, O_RDONLY);
 	} else if (argc == 2){
-		fd = 0;
+		fd = STDIN_FILENO
 	} else {
 		perror("numero argomenti sbagliato");
 		exit(1);
