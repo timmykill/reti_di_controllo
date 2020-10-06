@@ -5,11 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class Consumatore {
+public class Consumatore2 {
 	public static void main(String[] args) {
 		FileReader r = null;
 		char ch;
 		String str=null;
+		StringBuilder sb=new StringBuilder();
 		int x;
 		
 		if (args.length != 1 && args.length!=2){
@@ -28,12 +29,17 @@ public class Consumatore {
 			System.out.println("File non trovato");
 			System.exit(1);
 		}
+		
+		String line=null;
 		try {
 
 			while ((x = r.read()) >= 0) { 
 				ch = (char) x;
-				if(!str.contains(ch+""))
-					System.out.print(ch);
+				sb.append(ch);
+				if(ch=='\n'){
+					line=sb.toString().replace(str, "");
+					System.out.print(line);
+				}
 			}
 			r.close();
 		} catch(IOException ex){
