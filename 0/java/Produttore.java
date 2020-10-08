@@ -21,17 +21,13 @@ public class Produttore {
 		System.out.println("Inserisci la nuova riga o eof per terminare");
 		try {
 			fout = new FileWriter(args[0]);
-			while((inputl= in.readLine())!=null && inputl.length()!=0){
+			while((inputl= in.readLine())!=null ){
 				inputl=inputl+"\n";
 				System.out.println("Inserisci la nuova riga o eof per terminare");
 				fout.write(inputl, 0, inputl.length());
 			}
 			fout.close();
 		} 
-		catch (NumberFormatException nfe) { 
-			nfe.printStackTrace(); 
-			System.exit(1); 
-		}
 	    catch (IOException e) { 
 			e.printStackTrace();
 			System.exit(2); 
