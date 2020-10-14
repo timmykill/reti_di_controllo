@@ -1,11 +1,12 @@
 package esercitazioneProposta1;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Random;
+import java.net.UnknownHostException;
 
 public class Client {
 	public static void main(String[] args) {
@@ -25,7 +26,7 @@ public class Client {
 
 			if (portDiscServer < 1024 || portDiscServer > 65535) {
 				System.out.println("Porta non valida");
-				System.exit(2);
+				System.exit(1);
 			}
 
 			DatagramSocket socket;
@@ -84,7 +85,13 @@ public class Client {
 			socket.close();
 			
 
-		} catch (Exception e) {
+		}catch (UnknownHostException | NumberFormatException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}catch(IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}catch(Exception e) {
 			e.printStackTrace();
 			System.exit(1);
 		}

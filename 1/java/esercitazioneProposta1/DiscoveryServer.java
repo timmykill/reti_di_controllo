@@ -77,12 +77,12 @@ public class DiscoveryServer {
             System.exit(1);
         }
 
-        if(checkDuplicati(arrayFile)) {
-            System.out.println("I file devono essere distinti");
-            System.exit(1);
-        }
+      if(checkDuplicati(arrayFile)) {
+    	  System.out.println("I file devono essere distinti");
+          System.exit(1);
+      }
         
-        File f=null;
+      File f=null;
         
       for(int i=0;i<arrayFile.length;i++) {
     	  f=new File(arrayFile[i]);
@@ -106,6 +106,7 @@ public class DiscoveryServer {
 
                 while (true) {
                     try {
+                    	
                         data = new byte[256];
                     	packet = new DatagramPacket(data, data.length);
                     	socket.receive(packet);
