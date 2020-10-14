@@ -1,5 +1,7 @@
 package esercitazioneProposta1;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -56,15 +58,19 @@ public class Client {
 			packet.setPort(portRowServer);
 
 			//fa n richieste cicliche allo stesso rs e poi termina
-			Random r = new Random();
 			String richiesta = null;
-			int r1, r2, esito, numCicli = r.nextInt(50);
-			
+			int num1, num2, esito;
+			BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+			String risposta = null;
+			String []righe = null;
 			//INIZIO CICLO DI RICHIESTE
-			for (int i = 0; i < numCicli; i++) { 
-				r1 = r.nextInt(50)+1;
-				r2 = r.nextInt(50)+1;
-				richiesta = r1 + " " + r2;
+			
+			System.out.println("inserisci le righe da cambiare, termina con EOF");
+			while((risposta = stdIn.readLine()) != null){
+				righe = risposta.split(" ");
+				num1 = Integer.parseInt(righe[0]);
+				num2 = Integer.parseInt(righe[1]);
+				richiesta = num1 + " " + num2;
 
 				outBuff = Helper.stringUTFToBytes(richiesta);
 				packet.setData(outBuff);
