@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
 		file_in = argv[2];
 		fd = open(file_in, O_RDONLY);
 	} else if (argc == 2){
-		fd = STDIN_FILENO
+		fd = STDIN_FILENO;
 	} else {
 		perror("numero argomenti sbagliato");
 		exit(1);
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 	while(nread = read(fd, &read_char, sizeof(char))) /* Fino ad EOF*/{
 		if (nread >= 0){
 			is_filtered = false;
-			for (i = 0; i < filterlen; i++)
+			for (i = 0; i < filterlen && !is_filtered; i++)
 				is_filtered |= (read_char == filtered[i]);
 			if (!is_filtered)
 				putchar(read_char);
