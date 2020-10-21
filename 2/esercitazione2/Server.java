@@ -30,11 +30,22 @@ public class Server {
 			System.out.println("Usage: java Server [serverPort>1024]");
 			System.exit(1);
 		}
-
-		ServerSocket serverSocket = new ServerSocket(port);
-		serverSocket.setReuseAddress(true);
-		System.out.println("Server: avviato");
-		System.out.println("Server: creata la server socket: " + serverSocket);
+		
+		ServerSocket serverSocket =null;
+		
+		try {
+			serverSocket = new ServerSocket(port);
+			serverSocket.setReuseAddress(true);
+			System.out.println("Server: avviato");
+			System.out.println("Server: creata la server socket: " + serverSocket);
+	    }
+	    catch (Exception e) {
+	    	System.err
+	    		.println("Server: problemi nella creazione della server socket: "
+	    				+ e.getMessage());
+	    	e.printStackTrace();
+	    	System.exit(1);
+	    }
 
 		Socket clientSocket = null;
 
@@ -47,10 +58,14 @@ public class Server {
 				System.out.println("Server: connessione accettata: " + clientSocket);
 				new ServerThread(clientSocket).start();
 
-			} catch (SocketException e) {
+			} catch (Exception e) {
+				System.err
+				.println("Server: problemi nella accettazione della connessione: "
+						+ e.getMessage());
 				e.printStackTrace();
+				continue;
 			}
 		}
 
-	}
+}
 }

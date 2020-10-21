@@ -37,13 +37,15 @@ public class ServerThread extends Thread{
 					File file = new File(nomeFile);
 
 					if (file.exists()) {
-						System.out.println("Skippo il file " + nomeFile + ", già presente");
+						System.out.println("il file " + nomeFile + " è già presente");
 						esito = "già presente";
 						outSock.writeUTF(esito);
 					} else {
 						esito = "attiva trasferimento file";
 						outSock.writeUTF(esito);
-						fileDim = inSock.readLong();
+						
+						fileDim = Integer.parseInt(inSock.readUTF());
+						//fileDim = inSock.readLong();
 
 						outFile = new FileOutputStream(nomeFile);
 
@@ -55,12 +57,23 @@ public class ServerThread extends Thread{
 				}
 			} catch (EOFException ignored) {
 				System.out.println("EOF ricevuto \n Terminata connessione con " + clientSocket);
+				clientSocket.shutdownInput();
+				clientSocket.shutdownOutput();
 				clientSocket.close();
+				//System.exit(0); //il cliente ha finito le richieste 
+			}catch(SocketException e) {
+				System.out.println("timeout scattato");
+				e.printStackTrace();
+				clientSocket.shutdownInput();
+				clientSocket.shutdownOutput();
+				clientSocket.close();
+				System.exit(1);
 			}
 		} catch (IOException e){
 			e.printStackTrace();
+			System.exit(1);
 		}
 
-	}
+}
 }
 	
