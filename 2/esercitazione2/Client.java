@@ -41,72 +41,70 @@ public class Client{
 		
 		System.out.println("Inserire una directory:");
 		
-		while ((dirName = stdIn.readLine()) != null &&( !(dir = new File(dirName)).exists() || 
-				!dir.isDirectory() || !dir.canRead() || !dir.canExecute())) {
-			System.out.println("Directory non valida");
-		}
-		
-		if(dirName==null) 
-			System.exit(1);
-		
-		try {
-		//connessione
-		socket = new Socket(serverAddr, serverPort);
-		socket.setSoTimeout(30000);
-		inSock = new DataInputStream(socket.getInputStream());
-		outSock = new DataOutputStream(socket.getOutputStream());
-
-		//per ogni file nella directory
-		for (File elem : dir.listFiles()) {
-			dimFile = elem.length();
-
-			if (elem.isDirectory() || dimFile <= soglia) {
+		while ((dirName = stdIn.readLine()) != null) {
+			dir = new File(dirName);
+			if (!dir.exists() || !dir.isDirectory() || !dir.canRead() || !dir.canExecute()) {
+				System.out.println(dirName + " non è una directory o non è accessibile");
 				continue;
 			}
-				try {
-					fileName = elem.getName();
-					
-					outSock.writeUTF(fileName);//manda al server il nome del file
-					
-					serverResponse=inSock.readUTF();//lettura risposta server
-					
-					if (serverResponse.startsWith("attiva")) {
-						System.out.println("invio "+fileName+" al server");
-						fileIn = new FileInputStream(dir.getName() + File.separator + fileName);
-						
-						outSock.writeUTF(dimFile+"");
-						//outSock.writeLong(dimFile);//manda al server lunghezza file (in byte) e file
-						
-						FileUtility.trasferisci_a_byte_file_binario(
-								dimFile,
-								new DataInputStream(fileIn),
-								outSock
-						);
-						
-						System.out.println("Trasferimento di "+fileName+" terminato con successo");
-						
-						fileIn.close();
-					}else {
-						System.out.println(fileName+" è già presente");
-					}
-				} catch (IOException | SecurityException e) {
-					e.printStackTrace();
+			try {
+			//connessione
+			socket = new Socket(serverAddr, serverPort);
+			socket.setSoTimeout(30000);
+			inSock = new DataInputStream(socket.getInputStream());
+			outSock = new DataOutputStream(socket.getOutputStream());
+
+			//per ogni file nella directory
+			for (File elem : dir.listFiles()) {
+				dimFile = elem.length();
+
+				if (elem.isDirectory() || dimFile <= soglia) {
+					continue;
 				}
+					try {
+						fileName = elem.getName();
+						
+						outSock.writeUTF(fileName);//manda al server il nome del file
+						
+						serverResponse=inSock.readUTF();//lettura risposta server
+						
+						if (serverResponse.equals("attiva")) {
+							System.out.println("invio "+fileName+" al server");
+							fileIn = new FileInputStream(dir.getName() + File.separator + fileName);
+							
+							outSock.writeUTF(dimFile+"");
+							
+							FileUtility.trasferisci_file_binario(
+									dimFile,
+									new DataInputStream(fileIn),
+									outSock
+							);
+							
+							System.out.println("Trasferimento di "+fileName+" terminato con successo");
+							
+							fileIn.close();
+						}else {
+							System.out.println(fileName+" è già presente");
+						}
+					} catch (IOException | SecurityException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("Connessione terminata.");
+				socket.shutdownInput();
+				socket.shutdownOutput();
+				socket.close();
+				System.out.println("Inserire una directory:");
+			}catch(SocketException e) {
+				System.out.println("timeout scattato");
+				socket.shutdownInput();
+				socket.shutdownOutput();
+				socket.close();
+			}catch(IOException e) {
+				e.printStackTrace();
+				socket.close();//errore nella creazione della socket
 			}
-			System.out.println("Connessione terminata.");
-			socket.shutdownInput();
-			socket.shutdownOutput();
-			socket.close();
-			System.exit(0);
-		}catch(SocketException e) {
-			System.out.println("timeout scattato");
-			socket.shutdownInput();
-			socket.shutdownOutput();
-			socket.close();
-		}catch(IOException e) {
-			e.printStackTrace();
-			socket.close();//errore nella creazione della socket
+			
 		}
-		
-		}
+	}
 }

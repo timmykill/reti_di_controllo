@@ -41,16 +41,14 @@ public class ServerThread extends Thread{
 						esito = "già presente";
 						outSock.writeUTF(esito);
 					} else {
-						esito = "attiva trasferimento file";
+						esito = "attiva";
 						outSock.writeUTF(esito);
 						
 						fileDim = Integer.parseInt(inSock.readUTF());
-						//fileDim = inSock.readLong();
-
 						outFile = new FileOutputStream(nomeFile);
 
 						System.out.println("Ricevo il file " + nomeFile + ": \n");
-						FileUtility.trasferisci_a_byte_file_binario(fileDim, inSock, new DataOutputStream(outFile));
+						FileUtility.trasferisci_file_binario(fileDim, inSock, new DataOutputStream(outFile));
 						System.out.println("\nRicezione del file " + nomeFile + " terminata\n");
 						outFile.close();
 					}
