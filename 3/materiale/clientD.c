@@ -70,7 +70,7 @@ int main(int argc, char **argv){
 
 		/* richiesta operazione */
 		len = sizeof(servaddr);
-		if(sendto(sd, &okstr, strlen(okstr), 0, (struct sockaddr *)&servaddr, len) < 0){
+		if(sendto(sd, &okstr, LINE_LENGTH, 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}

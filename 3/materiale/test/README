@@ -1,0 +1,3 @@
+lib -> libreria utile al calcolo dei tempi
+files -> cartella con file da usare come input
+run_clients.sh -> script da eseguire per eseguire clienti multipli
