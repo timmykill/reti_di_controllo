@@ -10,6 +10,7 @@
 #include "lib/delta.h"
 
 #define LINE_LENGTH 256
+#define TEST
 
 int main(int argc, char **argv){
 
@@ -75,16 +76,20 @@ int main(int argc, char **argv){
 			perror("sendto");
 			continue;
 		}
+		#ifdef TEST
 		save_start_time(&start);
+		#endif
 		/* ricezione del risultato */
 		//printf("Attesa del risultato...\n");
 		if (recvfrom(sd, &ris, sizeof(ris), 0, (struct sockaddr *)&servaddr, &len) < 0){
 			perror("recvfrom");
 			continue;
 		}
+		#ifdef TEST
 		save_finish_time(&finish);//stampa dopo quanto tempo dopo la richiesta è arrivata la risposta
 		print_delta(start, finish);
-		printf("\n");
+		putchar('\n');
+		#endif
 		ris = ntohl(ris);
 		//printf("La line più lunga ha: %d caratteri\n", ris);
 
