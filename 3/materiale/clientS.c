@@ -52,10 +52,10 @@ int main(int argc, char *argv[])
 	if (host == NULL){
 		printf("%s not found in /etc/hosts\n", argv[1]);
 		exit(2);
-	}else{
-		servaddr.sin_addr.s_addr=((struct in_addr *)(host->h_addr))->s_addr;
-		servaddr.sin_port = htons(port);
 	}
+	servaddr.sin_addr.s_addr=((struct in_addr *)(host->h_addr))->s_addr;
+	servaddr.sin_port = htons(port);
+
 
 	/* CORPO DEL CLIENT:
 	ciclo di accettazione di richieste da utente ------- */
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 			printf("File da aprire: __%s__\n", nomeFile);
 
 			/* Verifico l'esistenza del file */
-			if((fdFile = open(nomeFile, O_RDONLY)) < 0){
+			if((fdFile = open(nomeFile, O_RDWR)) < 0){
 				perror("file");
 				printf("Il file non esiste\n");
 				printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
 								perror("apertura socket");
 								exit(1);
 							}
-							printf("Client: creata la socket sd=%d\n", sd);
 
 							/* Operazione di BIND implicita nella connect */
 							if(connect(sd,(struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0){
@@ -105,9 +104,8 @@ int main(int argc, char *argv[])
 							write(sd, &numLinea, sizeof(int));
 
 							/*INVIO File*/
-							printf("Client: stampo e invio file\n");
+							printf("Client: invio file\n");
 							while((nread = read(fdFile, buff, DIM_BUFF)) > 0){
-								write(1, buff, nread);	//stampa
 								write(sd, buff, nread);	//invio
 							}
 							printf("Client: file inviato\n");
@@ -115,11 +113,12 @@ int main(int argc, char *argv[])
 							shutdown(sd,1);
 
 							/*RICEZIONE File*/
-							printf("Client: ricevo e stampo file\n");
+							lseek(fdFile, 0L, SEEK_SET);//torno all'inizio del file
+							printf("Client: ricevo e salvo file\n");
 							while((nread = read(sd, buff, DIM_BUFF)) > 0){
 								write(fdFile, buff, nread);
-								write(1, buff, nread);
 							}
+							ftruncate(fdFile, lseek(fdFile, 0L, SEEK_CUR));
 							printf("Traspefimento terminato\n");
 							/* Chiusura socket in ricezione */
 							shutdown(sd, 0);

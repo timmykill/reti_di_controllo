@@ -1,4 +1,4 @@
-/* Server che riceve un file e lo ridirige ordinato al client */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,6 @@
 /********************************************************/
 void gestore(int signo){
   int stato;
-  printf("esecuzione gestore di SIGCHLD\n");
   wait(&stato);
 }
 /********************************************************/
@@ -26,8 +25,8 @@ int main(int argc, char **argv)
 {
 	int  listen_sd, conn_sd;
 	int port, len, num;
-  char buff;
-  int numLinea, tmp, i;
+  	char buff;
+  	int numLinea, tmp, i;
 	const int on = 1;
 	struct sockaddr_in cliaddr, servaddr;
 	struct hostent *host;
@@ -37,23 +36,21 @@ int main(int argc, char **argv)
 		printf("Error: %s port\n", argv[0]);
 		exit(1);
 	}
-	else{
-		num=0;
-		while( argv[1][num]!= '\0' ){
-			if( (argv[1][num] < '0') || (argv[1][num] > '9') ){
-				printf("Secondo argomento non intero\n");
-				exit(2);
-			}
-			num++;
+	num=0;
+	while( argv[1][num]!= '\0' ){
+		if( (argv[1][num] < '0') || (argv[1][num] > '9') ){
+			printf("Secondo argomento non intero\n");
+			exit(2);
 		}
-		port = atoi(argv[1]);
-		if (port < 1024 || port > 65535){
-			printf("Error: %s port\n", argv[0]);
-			printf("1024 <= port <= 65535\n");
-			exit(1);
-		}
-
+		num++;
 	}
+	port = atoi(argv[1]);
+	if (port < 1024 || port > 65535){
+		printf("Error: %s port\n", argv[0]);
+		printf("1024 <= port <= 65535\n");
+		exit(1);
+	}
+
 
 	/* INIZIALIZZAZIONE INDIRIZZO SERVER ----------------------------------------- */
 	memset ((char *)&servaddr, 0, sizeof(servaddr));
@@ -64,28 +61,28 @@ int main(int argc, char **argv)
 	/* CREAZIONE E SETTAGGI SOCKET D'ASCOLTO --------------------------------------- */
 	listen_sd = socket(AF_INET, SOCK_STREAM, 0);
 	if(listen_sd < 0){
-    perror("creazione socket ");
-     exit(1);
-  }
-	printf("Server: creata la socket d'ascolto per le richieste di ordinamento, fd=%d\n", listen_sd);
+    		perror("creazione socket ");
+    		 exit(1);
+  	}
+	printf("Server: creata la socket d'ascolto per le richieste, fd=%d\n", listen_sd);
 
 	if(setsockopt(listen_sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0){
-    perror("set opzioni socket d'ascolto");
-    exit(1);
-  }
+    		perror("set opzioni socket d'ascolto");
+    		exit(1);
+  	}
 	printf("Server: set opzioni socket d'ascolto ok\n");
 
 	if(bind(listen_sd,(struct sockaddr *) &servaddr, sizeof(servaddr)) < 0){
-    perror("bind socket d'ascolto");
-    exit(1);
-  }
+    		perror("bind socket d'ascolto");
+    		exit(1);
+  	}
 	printf("Server: bind socket d'ascolto ok\n");
 
   //Creazione coda d'ascolto
 	if (listen(listen_sd, 5) < 0){
-    perror("listen");
-    exit(1);
-  }
+    		perror("listen");
+    		exit(1);
+  	}
 	printf("Server: listen ok\n");
 
   //Aggancio gestore per figli zombie
@@ -102,9 +99,9 @@ int main(int argc, char **argv)
 				perror("Forzo la continuazione della accept");
 				continue;
 			}else{
-         exit(1);
-      }
-		}
+        			 exit(1);
+      			}
+		  }
 
 		if (fork() == 0){ // figlio
 			/*Chiusura FileDescr non utilizzati e ridirezione STDIN/STDOUT*/
@@ -113,30 +110,29 @@ int main(int argc, char **argv)
 			if (host == NULL){
 				printf("client host information not found\n"); continue;
 			}else{
-        printf("Server (figlio): host client e' %s \n", host->h_name);
-      }
-			printf("Server (figlio): eseguo l'ordinamento\n");
+        			printf("Server (figlio): host client e' %s \n", host->h_name);
+      			}
+			printf("Server (figlio): eseguo\n");
 
-      //Ricezione numero linea
-      read(conn_sd, &numLinea, sizeof(int));
-      numLinea = ntohs(numLinea);
-      printf("Ricevuto linea: %d\n", numLinea);
+      			//Ricezione numero linea
+      			read(conn_sd, &numLinea, sizeof(int));
+      			numLinea = ntohs(numLinea);
+      			printf("Ricevuto linea: %d\n", numLinea);
 
-      //Ricezione file
-      i = 1;
-      while(read(conn_sd, &buff, 1) == 1){
-        if(i != numLinea){
-          write(conn_sd, &buff, 1);
-          printf("%c", buff);
-        }
-        if(buff == '\n'){
-          i++;
-        }
-      }
-      shutdown(conn_sd, 0);
-      shutdown(conn_sd, 1);
-      close(conn_sd);
+      			//Ricezione file
+      			i = 1;
+      			while(read(conn_sd, &buff, 1) == 1){
+       				if(i != numLinea){
+        				write(conn_sd, &buff, 1);
+        			}
+        			if(buff == '\n'){
+        				i++;
+        			}
+      			}
+      			shutdown(conn_sd, 0);
+      			shutdown(conn_sd, 1);
+      			close(conn_sd);
 		} // figlio
-		close(conn_sd);  // padre chiude socket di connessione non di scolto
+		close(conn_sd);  // padre chiude socket di connessione non di ascolto
 	} // ciclo for infinito
 }
