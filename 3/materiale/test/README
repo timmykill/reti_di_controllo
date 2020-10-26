@@ -12,3 +12,5 @@ gcc serverD_con.c lib/delta.c -o serverparallelo
 4)in una nuova shell nella directory test esegui run_clienti.sh per far partire gli n clienti
 
 in client.logs si troverà il tempo trascorso tra invio richiesta e ottenimento risposta per ogni client lanciato
+
+#TODO calcolare media e malore massimo tempo di attesa per server parallelo e server sequenziale al variare dei clienti lanciati 
