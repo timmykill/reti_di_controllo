@@ -1,6 +1,10 @@
 #! /bin/bash
-#questo script lancia 5 client dandogli in input un file con 1 milione di righe
-for i in `seq 1 5`; do {
-	echo -e "files/f_100k_line\n" | ./client localhost 50000 & 
+
+#lancia gli n clienti specificati tramite argomento dall'utente
+[ $# -ne 1 ] && echo "Usage: $0 numeroClienti" && exit 1
+
+for i in `seq 1 $1`; do {
+	echo -e "files/f_1m_line\n" | ./client localhost 50000 >> client.logs &
+	
 } done
 	

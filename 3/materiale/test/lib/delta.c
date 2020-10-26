@@ -16,15 +16,17 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
     }
 }
 
-void save_start_time(void){
-	clock_gettime(CLOCK_REALTIME, &start);
+void save_start_time(struct timespec *start){
+	clock_gettime(CLOCK_REALTIME, start);
 }
 
-void save_finish_time(void){
-	clock_gettime(CLOCK_REALTIME, &finish);
+void save_finish_time(struct timespec *finish){
+	clock_gettime(CLOCK_REALTIME, finish);
 }
 
-void print_delta(void){
+void print_delta(struct timespec start, struct timespec finish){
+	struct timespec delta;
 	sub_timespec(start, finish, &delta);
-	printf("%d.%.9ld", (int)delta.tv_sec, delta.tv_nsec);
+	int i = printf("%d.%.9ld", (int)delta.tv_sec, delta.tv_nsec);
+	i++;
 }

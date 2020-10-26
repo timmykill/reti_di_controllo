@@ -1,3 +1,14 @@
-lib -> libreria utile al calcolo dei tempi
+lib -> libreria utile al calcolo dei tempi, in lib/delta.h e lib/delta.c dettagli
 files -> cartella con file da usare come input
 run_clients.sh -> script da eseguire per eseguire clienti multipli
+
+step da fare per ottenere dati prestazioni
+1) compila client e le due varianti del server
+gcc clientD.c lib/delta.c -o client
+gcc serverD.c lib/delta.c -o serversequenziale
+gcc serverD_con.c lib/delta.c -o serverparallelo
+2)in files eseguire genera_file.sh per generare il file da dare in input ai clienti(file di input da 1 milione di righe)
+3)in una shell nella directory test esegui il server di cui si vuole vedere la performance
+4)in una nuova shell nella directory test esegui run_clienti.sh per far partire gli n clienti
+
+in client.logs si troverà il tempo trascorso tra invio richiesta e ottenimento risposta per ogni client lanciato

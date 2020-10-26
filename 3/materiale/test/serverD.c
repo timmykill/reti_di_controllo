@@ -11,7 +11,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
-#include "lib/delta.h"
 
 #define N 256
 int searchWord(int fd);
@@ -72,17 +71,12 @@ int main(int argc, char **argv){
 	}
 	printf("Server: bind socket ok\n");
 	
-	int soglia = 0;
 	/* CICLO DI RICEZIONE RICHIESTE ------------------------------------------ */
 	for(;;){ //demone
 		len = sizeof(struct sockaddr_in);
 		if (recvfrom(sd, req, N, 0, (struct sockaddr *)&cliaddr, &len) < 0){
 			perror("recvfrom ");
 			continue;
-		}
-
-		if(soglia == 0){
-			save_start_time();
 		}
 
 		printf("Operazione richiesta su file: %s\n", req);
@@ -107,11 +101,6 @@ int main(int argc, char **argv){
       			perror("sendto ");
       			continue;
     		}
-		if(soglia == 19){//misurazione tempo solo dal 1o al 20o termine
-			save_finish_time();
-			print_delta();
-		}
-		soglia++;
 	} //for
 }
 

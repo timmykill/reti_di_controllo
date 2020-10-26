@@ -6,10 +6,9 @@
 #include <unistd.h>
 
 #define NS_PER_SECOND 1000000000
-static struct timespec start, finish, delta;
 
 
-void save_start_time(void);
-void save_finish_time(void);
-void print_delta(void);
+void save_start_time(struct timespec *start);//metti l'istante iniziale nella struttura timespec
+void save_finish_time(struct timespec *finish);//metti l'istante finale nella struttura timespec 
+void print_delta(struct timespec start, struct timespec finish);//calcola e stampa la differenza di tempo trascorsa tra i due istanti
 #endif
