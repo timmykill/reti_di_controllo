@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 	/* CORPO DEL CLIENT:
 	ciclo di accettazione di richieste da utente ------- */
-	printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
+	//printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
 
 	while ((ok = scanf("%d", &numLinea)) != EOF){
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 			do {
 				c = getchar();
 			}while (c != '\n');
-			printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
+			//printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
 			continue;
 			}
 
@@ -75,9 +75,9 @@ int main(int argc, char *argv[])
 			printf("Inserire un intero maggiore di 0\n");
 			printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
 		}else{
-			printf("Inserire nome file: ");
+			//printf("Inserire nome file: ");
 			scanf("%s", nomeFile);
-			printf("File da aprire: __%s__\n", nomeFile);
+			//printf("File da aprire: __%s__\n", nomeFile);
 
 			/* Verifico l'esistenza del file */
 			if((fdFile = open(nomeFile, O_RDWR)) < 0){
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 					perror("connect");
 					exit(1);
 				}
-				printf("Client: connect ok\n");
+				//printf("Client: connect ok\n");
 
 				numLineaNet = htons(numLinea);
                                 write(sd, &numLineaNet, sizeof(int));
@@ -113,30 +113,30 @@ int main(int argc, char *argv[])
 				while((nread = read(fdFile, buff, DIM_BUFF)) > 0){
 					write(sd, buff, nread);	//invio
 				}
-				printf("Client: file inviato\n");
+				//printf("Client: file inviato\n");
 				/* Chiusura socket in spedizione -> invio dell'EOF */
 				shutdown(sd,1);
 
 				/*RICEZIONE File*/
 				lseek(fdFile, 0L, SEEK_SET);//torno all'inizio del file
-				printf("Client: ricevo e salvo file\n");
+				//printf("Client: ricevo e salvo file\n");
 				while((nread = read(sd, buff, DIM_BUFF)) > 0){
 					write(fdFile, buff, nread);
 				}
 				ftruncate(fdFile, lseek(fdFile, 0L, SEEK_CUR));
 				flock(fdFile, LOCK_UN);
-				printf("Traspefimento terminato\n");
+				//printf("Traspefimento terminato\n");
 				/* Chiusura socket in ricezione */
 				shutdown(sd, 0);
 				/* Chiusura file */
 				close(fdFile);
 				close(sd);
 
-				printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
+				//printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
 			}
 		}
 
 	}//while
-	printf("\nClient: termino...\n");
+	//printf("\nClient: termino...\n");
 	exit(0);
 }
