@@ -1,8 +1,8 @@
 #! /bin/bash
 
 TEST_PORT=50000
-LOC_TESTS="10000 50000 100000"
-CLIENT_TESTS="10 20 30"
+LOC_TESTS="100000 1000000"
+CLIENT_TESTS="10 30"
 
 # Compilation using test flag
 make test
