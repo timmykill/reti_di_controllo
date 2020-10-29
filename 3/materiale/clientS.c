@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 			printf("File da aprire: __%s__\n", nomeFile);
 
 			/* Verifico l'esistenza del file */
-			if((fdFile = open(nomeFile, O_RDWR)) < 0){
+			if((fdFile = open(nomeFile, O_RDONLY)) < 0){
 				perror("file");
 				printf("Il file non esiste\n");
 				printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
@@ -102,12 +102,6 @@ int main(int argc, char *argv[])
 				numLineaNet = htons(numLinea);
                                 write(sd, &numLineaNet, sizeof(int));
 				/*INVIO File*/
-                                if(flock(fdFile, LOCK_EX) < 0){
-                                        perror("Error in locking file: ");
-                                        close(fdFile);
-                                        close(sd);
-                                        continue;
-                                }
 				printf("Client: ottenuto accesso esclusivo al file\nelimino linea: %d\n", numLinea);
 
 				while((nread = read(fdFile, buff, DIM_BUFF)) > 0){
@@ -118,13 +112,10 @@ int main(int argc, char *argv[])
 				shutdown(sd,1);
 
 				/*RICEZIONE File*/
-				lseek(fdFile, 0L, SEEK_SET);//torno all'inizio del file
 				printf("Client: ricevo e salvo file\n");
 				while((nread = read(sd, buff2, DIM_BUFF2)) > 0){
-					write(fdFile, buff2, nread);
+					write(1, buff2, nread);
 				}
-				ftruncate(fdFile, lseek(fdFile, 0L, SEEK_CUR));
-				flock(fdFile, LOCK_UN);
 				printf("Traspefimento terminato\n");
 				/* Chiusura socket in ricezione */
 				shutdown(sd, 0);
