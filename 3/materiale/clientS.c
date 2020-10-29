@@ -9,12 +9,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define DIM_BUFF 256
-
+#define DIM_BUFF 1024
+#define DIM_BUFF2 1
 int main(int argc, char *argv[])
 {
 	int sd, port, fdFile, nread, ok;
-	char buff[DIM_BUFF], c;
+	char buff[DIM_BUFF],buff2[DIM_BUFF2], c;
 	int numLinea, numLineaNet;
 	char nomeFile[FILENAME_MAX + 1];
 	struct hostent *host;
@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
 				/*RICEZIONE File*/
 				lseek(fdFile, 0L, SEEK_SET);//torno all'inizio del file
 				printf("Client: ricevo e salvo file\n");
-				while((nread = read(sd, buff, DIM_BUFF)) > 0){
-					write(fdFile, buff, nread);
+				while((nread = read(sd, buff2, DIM_BUFF2)) > 0){
+					write(fdFile, buff2, nread);
 				}
 				ftruncate(fdFile, lseek(fdFile, 0L, SEEK_CUR));
 				flock(fdFile, LOCK_UN);
