@@ -14,14 +14,12 @@
 #include <sys/wait.h>
 
 #define N 256
-int searchWord(int fd);
-
 void gestore(int signo);
 
 int main(int argc, char **argv){
 
-	int sd, port, len, num1, ris,pid;
-	char req[N];
+	int sd, port, len, num1, ris = 0,pid,i = 0;
+	char req[N], tmp;
 	const int on = 1;
 	struct sockaddr_in cliaddr, servaddr;
 	struct hostent *clienthost;
@@ -97,7 +95,16 @@ int main(int argc, char **argv){
                 printf("Errore apertura file\n");
                 ris = -1;
                 }else{
-                    ris = searchWord(fd);
+			while(read(fd, &tmp, 1) == 1){
+				if((tmp != ' ') && (tmp != '\n')){
+					i++;
+				}else{
+					if(ris < i){
+						ris = i;
+					}
+				i = 0;
+				}
+			}
                 }
             close(fd);
             ris = htonl(ris);//conversione risposta
@@ -112,24 +119,6 @@ int main(int argc, char **argv){
 	} //for
 }
 
-int searchWord(int fd){
-  char tmp;
-  int i = 0, result = 0;
-
-  while(read(fd, &tmp, 1) == 1){
-    if((tmp != ' ') && (tmp != '\n')){
-      i++;
-    }else{
-      if(result < i){
-        result = i;
-      }
-      i = 0;
-    }
-  }
-
-  return result;
-
-}
 
 void gestore(int signo){ 
     int stato;
