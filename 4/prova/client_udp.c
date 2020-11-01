@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 	struct sockaddr_in servaddr;
 	int  port, sd, num1, ris;
 	unsigned int len;
-	char okstr[LINE_LENGTH];
+	char okstr[LINE_LENGTH], word[LINE_LENGTH];
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc != 3){
@@ -65,12 +65,19 @@ int main(int argc, char **argv){
 	//printf("Client: creata la socket sd=%d\n", sd);
 
 	/* CORPO DEL CLIENT: ciclo di accettazione di richieste da utente */
-//	printf("Inserire nome file: \n");
+	printf("Inserire nome file: \n");
 	while ((scanf("%s", okstr)) != EOF ){
 		struct timespec start, finish;
 		/* richiesta operazione */
 		len = sizeof(servaddr);
-		if(sendto(sd, &okstr, LINE_LENGTH, 0, (struct sockaddr *)&servaddr, len) < 0){
+		if(sendto(sd, &okstr, strlen(okstr), 0, (struct sockaddr *)&servaddr, len) < 0){
+			perror("sendto");
+			continue;
+		}
+		
+		 printf("Inserire parola da eliminare:\n");
+        scanf("%s",word);//necessario controllo
+        if(sendto(sd, &word, strlen(word), 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}
@@ -78,8 +85,8 @@ int main(int argc, char **argv){
 		save_time(&start);
 		#endif
 		/* ricezione del risultato */
-		//printf("Attesa del risultato...\n");
-		if (recvfrom(sd, &ris, sizeof(ris), 0, (struct sockaddr *)&servaddr, &len) < 0){
+		printf("Attesa del risultato...\n");
+		if (recvfrom(sd, &ris, sizeof(ris), 0, (struct sockaddr *)&servaddr, &len) < 0){//risp se il file c'è o no
 			perror("recvfrom");
 			continue;
 		}
@@ -87,11 +94,15 @@ int main(int argc, char **argv){
 		save_time(&finish);//stampa dopo quanto tempo dopo la richiesta è arrivata la risposta
 		print_delta(start, finish);
 		#endif
+        
 		ris = ntohl(ris);
-		//printf("La line più lunga ha: %d caratteri\n", ris);
-
-		//printf("Inserire nome file: \n");
-
+		
+       if(ris<0)
+           printf("File inesistente\n");
+        else{
+            printf("%d occorrenze di %s eliminate da %s\n",ris,word,okstr);
+        }
+		
 	} // while
 
 	//CLEAN OUT
