@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -22,7 +23,7 @@
 #define BUF_SIZE 256
 
 int deleteOccurences(char* file, char* word);
-int replace_string_mmap(char* file, char* word);
+int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
 void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count);
 
 int main(int argc, char **argv){
@@ -30,7 +31,7 @@ int main(int argc, char **argv){
 	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds, ris;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
-	int socklen_udp;
+	int client_addr_len;
 	const int on = 1;
 	fd_set rset;
 
@@ -45,7 +46,8 @@ int main(int argc, char **argv){
 	(socket_udp < 0 || socket_tcp < 0) && die("creazione socket", -1);
 
 	/* bind socket */
-	setsockopt(socket_udp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0 && die("setsockopt", -5);
+	setsockopt(socket_udp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0 && die("setsockopt udp", -5);
+	setsockopt(socket_tcp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0 && die("setsockopt tcp", -5);
 
 	bind(socket_udp, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0 && die("bind udp", -2);
 	bind(socket_tcp, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0 && die("bind tcp", -3);
@@ -57,15 +59,15 @@ int main(int argc, char **argv){
 	FD_SET(socket_udp, &rset);
 	FD_SET(socket_tcp, &rset);
 	nfds = MAX(socket_tcp, socket_udp) + 1;
-	socklen_udp = sizeof(struct sockaddr_in);
+	client_addr_len = sizeof(client_addr);
 	
     printf("Server: mi metto in attesa\n");
     
 	for(;;){
 		select(nfds, &rset, NULL, NULL, NULL);//controllo necessario
 		if (FD_ISSET(socket_udp, &rset)){
-            recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &socklen_udp);//controllo
-			recvfrom(socket_udp, word, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &socklen_udp);
+            recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);//controllo
+			recvfrom(socket_udp, word, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
             //printf("%s\n",buffer);
             //char *file = strtok(buffer, " ");
             //char *word = strtok(NULL, " ");
@@ -79,13 +81,63 @@ int main(int argc, char **argv){
 			#endif
             ris=htonl(ris);
 
-            if(sendto(socket_udp,&ris,sizeof(ris),0, (struct sockaddr *) &client_addr, socklen_udp) < 0){
+            if(sendto(socket_udp, &ris, sizeof(ris), 0, (struct sockaddr *) &client_addr, client_addr_len) < 0){
                 perror("sendto");
                 continue;
             }
 			
 		} else if (FD_ISSET(socket_tcp, &rset)){
-			puts("tcp\n");
+			int socket_conn;
+			printf("%d\n", socket_tcp);
+			if((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
+				if (errno == EINTR){
+					perror("Forzo la continuazione della accept");
+					continue;
+				} else {
+        			 die("socket tcp", -200);
+      			}
+			}
+			if (fork() == 0){
+				int message_len;
+				char message[BUF_SIZE];
+				DIR * dir1;
+				char * entry;
+				struct hostent * host;
+
+				close(socket_tcp);
+				host = gethostbyaddr((char *) &client_addr.sin_addr, sizeof(client_addr.sin_addr), AF_INET);
+				if (host == NULL) {
+					printf("client host information not found\n");
+					continue;
+				} else {
+					printf("Server (figlio): host client e' %s \n", host->h_name);
+				}
+				LOGD("child starting\n");
+				read(socket_conn, &message_len, sizeof(message_len));
+				message_len = ntohl(message_len);
+				read(socket_conn, message, message_len);
+				puts(message);
+				
+				dir1 = opendir(message);
+				if (dir1) {
+					/* inlined strcmp */
+					while ((entry = readdir(dir1)->d_name) && !(entry[0] == '.' && entry[1] == '\0')) {
+						LOGD("trovato: %s\n", entry);
+						message_len = htonl(strlen(entry) + 1);
+						write(socket_conn, &message_len, sizeof(message_len));
+						write(socket_conn, entry, message_len);
+					}
+					closedir(dir1);
+				}
+
+				write(socket_conn, 0, sizeof(int));
+
+				LOGD("child ha finito\n");
+				shutdown(socket_conn, 0);
+				shutdown(socket_conn, 1);
+				close(socket_conn);
+				exit(1);
+			}
 		}
 	}
 }

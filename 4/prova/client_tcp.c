@@ -9,30 +9,25 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define DIM_BUFF 1024
-#define DIM_BUFF2 1
+#include "shared.h"
+
+#define BUFF_LEN 1024
 int main(int argc, char *argv[])
 {
-	int sd, port, fdFile, nread, ok;
-	char buff[DIM_BUFF],buff2[DIM_BUFF2], c;
-	int numLinea, numLineaNet;
-	char nomeFile[FILENAME_MAX + 1];
+	int fd_socket, port, nread, msg_len;
+	char buf[BUFF_LEN];
 	struct hostent *host;
 	struct sockaddr_in servaddr;
 
-
-	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc!=3){
-		printf("Error:%s serverAddress serverPort\n", argv[0]);
+		printf("Usage:%s serverAddress serverPort\n", argv[0]);
 		exit(1);
 	}
 
-	/* INIZIALIZZAZIONE INDIRIZZO SERVER -------------------------- */
 	memset((char *)&servaddr, 0, sizeof(struct sockaddr_in));
 	servaddr.sin_family = AF_INET;
 	host = gethostbyname(argv[1]);
 
-	/*VERIFICA INTERO*/
 	nread=0;
 	while( argv[2][nread]!= '\0' ){
 		if( (argv[2][nread] < '0') || (argv[2][nread] > '9') ){
@@ -43,7 +38,6 @@ int main(int argc, char *argv[])
 	}
 	port = atoi(argv[2]);
 
-	/* VERIFICA PORT e HOST */
 	if (port < 1024 || port > 65535){
 		printf("%s = porta scorretta...\n", argv[2]);
 		exit(2);
@@ -55,79 +49,28 @@ int main(int argc, char *argv[])
 	servaddr.sin_addr.s_addr=((struct in_addr *)(host->h_addr))->s_addr;
 	servaddr.sin_port = htons(port);
 
+	while (scanf("%s", buf)){
+		(fd_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0 && die("apertura socket", -100);
+		connect(fd_socket,(struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0 && die("connect", -101);
 
-	/* CORPO DEL CLIENT:
-	ciclo di accettazione di richieste da utente ------- */
-	printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
+		msg_len = strlen(buf) + 1;
+		msg_len = htonl(msg_len);
+		write(fd_socket, &msg_len, sizeof(msg_len));
+		write(fd_socket, buf, msg_len);
 
-	while ((ok = scanf("%d", &numLinea)) != EOF){
+		read(fd_socket, &msg_len, sizeof(msg_len));
+		msg_len = ntohl(msg_len);
 
-		if( ok != 1){
-			do {
-				c = getchar();
-			}while (c != '\n');
-			printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
-			continue;
-			}
-
-		if(numLinea <= 0){
-			perror("numLinea");
-			printf("Inserire un intero maggiore di 0\n");
-			printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
-		}else{
-			printf("Inserire nome file: ");
-			scanf("%s", nomeFile);
-			printf("File da aprire: __%s__\n", nomeFile);
-
-			/* Verifico l'esistenza del file */
-			if((fdFile = open(nomeFile, O_RDONLY)) < 0){
-				perror("file");
-				printf("Il file non esiste\n");
-				printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
-			}else{
-				/* CREAZIONE SOCKET ------------------------------------ */
-				sd = socket(AF_INET, SOCK_STREAM, 0);
-				if(sd < 0){
-					perror("apertura socket");
-					exit(1);
-				}
-
-				/* Operazione di BIND implicita nella connect */
-				if(connect(sd,(struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0){
-					perror("connect");
-					exit(1);
-				}
-				printf("Client: connect ok\n");
-
-				numLineaNet = htons(numLinea);
-                                write(sd, &numLineaNet, sizeof(int));
-				/*INVIO File*/
-				printf("Client: ottenuto accesso esclusivo al file\nelimino linea: %d\n", numLinea);
-
-				while((nread = read(fdFile, buff, DIM_BUFF)) > 0){
-					write(sd, buff, nread);	//invio
-				}
-				printf("Client: file inviato\n");
-				/* Chiusura socket in spedizione -> invio dell'EOF */
-				shutdown(sd,1);
-
-				/*RICEZIONE File*/
-				printf("Client: ricevo e salvo file\n");
-				while((nread = read(sd, buff2, DIM_BUFF2)) > 0){
-					write(1, buff2, nread);
-				}
-				printf("Traspefimento terminato\n");
-				/* Chiusura socket in ricezione */
-				shutdown(sd, 0);
-				/* Chiusura file */
-				close(fdFile);
-				close(sd);
-
-				printf("Numero riga da eliminare prossimo file, EOF per terminare: ");
-			}
+		while (!msg_len){
+			LOGD("trovato, size: %d\n", msg_len);
+			read(fd_socket, buf, BUFF_LEN);
+			printf("%s\n", buf);
+			read(fd_socket, &msg_len, sizeof(msg_len));
+			msg_len = ntohl(msg_len);
 		}
 
-	}//while
-	printf("\nClient: termino...\n");
-	exit(0);
+		shutdown(fd_socket, 0);
+		shutdown(fd_socket, 1);
+		close(fd_socket);
+	}
 }

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "shared.h"
 
+
+
 int die(char * msg, int ret)
 {
 	perror(msg);
