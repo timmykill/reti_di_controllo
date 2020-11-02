@@ -18,6 +18,7 @@ $(TARGETS): %: %.o $(shared_objects)
 
 clean:
 	rm -f *.o
+	rm filetemp
 
 purge: clean
 	rm $(TARGETS)

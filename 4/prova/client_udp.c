@@ -16,11 +16,12 @@ int main(int argc, char **argv){
 	struct sockaddr_in servaddr;
 	int  port, sd, num1, ris;
 	unsigned int len;
-	char okstr[LINE_LENGTH], word[LINE_LENGTH];
+	char nome_file[LINE_LENGTH], word[LINE_LENGTH];
+		
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc != 3){
-		printf("Error:%s serverAddress serverPort\n", argv[0]);
+		printf("Usage: %s serverAddress serverPort\n", argv[0]);
 		exit(1);
 	}
 
@@ -29,7 +30,7 @@ int main(int argc, char **argv){
 	while( argv[2][num1]!= '\0' ){
 		if( (argv[2][num1] < '0') || (argv[2][num1] > '9') ){
 			printf("Secondo argomento non intero\n");
-			printf("Error:%s serverAddress serverPort\n", argv[0]);
+			printf("Usage: %s serverAddress serverPort\n", argv[0]);
 			exit(2);
 		}
 		num1++;
@@ -66,21 +67,25 @@ int main(int argc, char **argv){
 
 	/* CORPO DEL CLIENT: ciclo di accettazione di richieste da utente */
 	printf("Inserire nome file: \n");
-	while ((scanf("%s", okstr)) != EOF ){
+	while ((scanf("%s", nome_file)) != EOF ){
 		struct timespec start, finish;
 		/* richiesta operazione */
 		len = sizeof(servaddr);
-		if(sendto(sd, &okstr, strlen(okstr), 0, (struct sockaddr *)&servaddr, len) < 0){
+		if(sendto(sd, &nome_file, strlen(nome_file) + 1, 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}
 
 		printf("Inserire parola da eliminare:\n");
 		scanf("%s",word);//necessario controllo
-		if(sendto(sd, &word, strlen(word), 0, (struct sockaddr *)&servaddr, len) < 0){
+		if(sendto(sd, &word, strlen(word) + 1, 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}
+		#ifdef TEST
+		printf("nome file: '%s'\nparola: '%s'\n", nome_file, word);;
+		#endif
+
 		#ifdef TEST
 		save_time(&start);
 		#endif
@@ -100,7 +105,7 @@ int main(int argc, char **argv){
 		if(ris<0){
 			printf("File inesistente\n");
 		} else {
-			printf("%d occorrenze di %s eliminate da %s\n",ris,word,okstr);
+			printf("%d occorrenze di %s eliminate da %s\n", ris, word, nome_file);
 		}
 	}
 

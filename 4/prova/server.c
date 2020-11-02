@@ -19,11 +19,11 @@
 
 #define BUF_SIZE 256
 
-int deleteOccurences(int fd, int fd_temp, char* word);
+int deleteOccurences(char* file, char* word);
 
 int main(int argc, char **argv){
 
-	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds,fd_file,fd_temp, ris=-1;
+	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds, ris;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
 	int socklen_udp;
@@ -52,13 +52,9 @@ int main(int argc, char **argv){
 	FD_ZERO(&rset);
 	FD_SET(socket_udp, &rset);
 	FD_SET(socket_tcp, &rset);
-	/* 
-		MAX è una macro gcc
-		/usr/include/sys/param.h
-	*/
 	nfds = MAX(socket_tcp, socket_udp) + 1;
 	socklen_udp = sizeof(struct sockaddr_in);
-    
+	
     printf("Server: mi metto in attesa\n");
     
 	for(;;){
@@ -72,23 +68,13 @@ int main(int argc, char **argv){
             
             printf("Elimino occorrenze di %s da file %s\n",word,file);
             
-            fd_file=open(file,O_RDWR);
-            fd_temp=open("filetemp",O_WRONLY|O_CREAT|O_TRUNC,0777);
-            if(fd_file<0 || fd_temp<0){
-                ris=htonl(ris);
-                sendto(socket_udp,&ris,sizeof(ris),0, (struct sockaddr *) &client_addr, socklen_udp);//controllo su sendto
-                continue;
-			}
 			#if DEL_OCC_MMAP
 			#else
-            ris = deleteOccurences(fd_file, fd_temp, word);
+            ris = deleteOccurences(file, word);
 			#endif
             ris=htonl(ris);
-            
-            remove(file);
-            rename("filetemp", file);
 
-            if(sendto(socket_udp,&ris,sizeof(ris),0, (struct sockaddr *) &client_addr, socklen_udp)){
+            if(sendto(socket_udp,&ris,sizeof(ris),0, (struct sockaddr *) &client_addr, socklen_udp) < 0){
                 perror("sendto");
                 continue;
             }
@@ -99,10 +85,16 @@ int main(int argc, char **argv){
 	}
 }
 
-int deleteOccurences(int fd, int fd_temp, char* word){
-    int nread=0, i=0, found, j, k, stringLen, wordLen, numW=0;
+int deleteOccurences(char* file, char* word){
+    int nread=0, i=0, found, j, k, stringLen, wordLen, numW=0, fd, fd_temp;
     char c;
     char buf[BUF_SIZE];
+	fd=open(file,O_RDWR);
+	fd_temp=open("filetemp",O_WRONLY|O_CREAT|O_TRUNC,0777);
+	if(fd<0 || fd_temp<0){
+		puts("something went wrong opening the file\n");
+		return -1;
+	}
     while((nread=read(fd,&c,sizeof(c)))>0){
         
         if(c!='\n'&&i<BUF_SIZE-1){
@@ -140,6 +132,8 @@ int deleteOccurences(int fd, int fd_temp, char* word){
             i=1;
             buf[0]=c;}
     }
+    remove(file);
+    rename("filetemp", file);
     return numW;
     
 }
