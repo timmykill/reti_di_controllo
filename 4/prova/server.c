@@ -30,11 +30,6 @@ int main(int argc, char **argv){
 	const int on = 1;
 	fd_set rset;
 
-	#ifdef TEST
-//	extern int LOG_FD;
-//	LOG_FD = 2; 
-	#endif
-
 	memset((char *) &server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -83,8 +78,11 @@ int main(int argc, char **argv){
                 ris=htonl(ris);
                 sendto(socket_udp,&ris,sizeof(ris),0, (struct sockaddr *) &client_addr, socklen_udp);//controllo su sendto
                 continue;
-            }
+			}
+			#if DEL_OCC_MMAP
+			#else
             ris = deleteOccurences(fd_file, fd_temp, word);
+			#endif
             ris=htonl(ris);
             
             remove(file);

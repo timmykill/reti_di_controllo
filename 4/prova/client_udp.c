@@ -24,28 +24,28 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 
-	        /* VERIFICA PORTA*/
-        num1 = 0;
-        while( argv[2][num1]!= '\0' ){
-                if( (argv[2][num1] < '0') || (argv[2][num1] > '9') ){
-                        printf("Secondo argomento non intero\n");
-                        printf("Error:%s serverAddress serverPort\n", argv[0]);
-                        exit(2);
-                }
-                num1++;
-        }
-        port = atoi(argv[2]); //porta server
-        if (port < 1024 || port > 65535){
-                printf("%s = porta scorretta...\n", argv[2]);
-                exit(2);
-        }
+	/* VERIFICA PORTA*/
+	num1 = 0;
+	while( argv[2][num1]!= '\0' ){
+		if( (argv[2][num1] < '0') || (argv[2][num1] > '9') ){
+			printf("Secondo argomento non intero\n");
+			printf("Error:%s serverAddress serverPort\n", argv[0]);
+			exit(2);
+		}
+		num1++;
+	}
+	port = atoi(argv[2]); //porta server
+	if (port < 1024 || port > 65535){
+		printf("%s = porta scorretta...\n", argv[2]);
+		exit(2);
+	}
 
 	host = gethostbyname(argv[1]);
-        /* VERIFICA  HOST */
-        if (host == NULL){
-                printf("%s not found in /etc/hosts\n", argv[1]);
-                exit(2);
-        }
+	/* VERIFICA  HOST */
+	if (host == NULL){
+		printf("%s not found in /etc/hosts\n", argv[1]);
+		exit(2);
+	}
 
 
 	/* INIZIALIZZAZIONE INDIRIZZO SERVER --------------------- */
@@ -74,10 +74,10 @@ int main(int argc, char **argv){
 			perror("sendto");
 			continue;
 		}
-		
-		 printf("Inserire parola da eliminare:\n");
-        scanf("%s",word);//necessario controllo
-        if(sendto(sd, &word, strlen(word), 0, (struct sockaddr *)&servaddr, len) < 0){
+
+		printf("Inserire parola da eliminare:\n");
+		scanf("%s",word);//necessario controllo
+		if(sendto(sd, &word, strlen(word), 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}
@@ -94,16 +94,15 @@ int main(int argc, char **argv){
 		save_time(&finish);//stampa dopo quanto tempo dopo la richiesta è arrivata la risposta
 		print_delta(start, finish);
 		#endif
-        
+
 		ris = ntohl(ris);
-		
-       if(ris<0)
-           printf("File inesistente\n");
-        else{
-            printf("%d occorrenze di %s eliminate da %s\n",ris,word,okstr);
-        }
-		
-	} // while
+
+		if(ris<0){
+			printf("File inesistente\n");
+		} else {
+			printf("%d occorrenze di %s eliminate da %s\n",ris,word,okstr);
+		}
+	}
 
 	//CLEAN OUT
 	close(sd);
