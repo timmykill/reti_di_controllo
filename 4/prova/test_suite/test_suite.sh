@@ -4,7 +4,7 @@ TEST_PORT=65111
 LOC_TESTS="1000"
 CLIENT_TESTS="1"
 REMBUF="stdbuf -i0 -o0 -e0"
-PAROLA="Antares"
+PAROLA="hello"
 
 
 # Generate random files
@@ -12,7 +12,12 @@ PAROLA="Antares"
 #	seq 1 100 | xargs -Inone cat /usr/share/dict/words | shuf | head -n $loc > files/$loc.txt
 #done
 for loc in $LOC_TESTS; do
-	head -n $loc /usr/share/dict/words > files/$loc-orig.txt
+	TEMPFILE=$(mktemp)
+	for i in `seq 1000`; do
+		cat /usr/share/dict/words >> $TEMPFILE
+	done
+	head -n $loc $TEMPFILE > files/$loc-orig.txt
+	rm $TEMPFILE
 done
 
 
