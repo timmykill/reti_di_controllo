@@ -1,14 +1,19 @@
 #! /bin/bash
 
 TEST_PORT=65111
-LOC_TESTS="10"
+LOC_TESTS="1000"
 CLIENT_TESTS="1"
 REMBUF="stdbuf -i0 -o0 -e0"
+PAROLA="yolo"
 
 
 # Generate random files
+#for loc in $LOC_TESTS; do
+#	seq 1 100 | xargs -Inone cat /usr/share/dict/words | shuf | head -n $loc > files/$loc.txt
+#done
+
 for loc in $LOC_TESTS; do
-	seq 1 100 | xargs -Inone cat /usr/share/dict/words | shuf | head -n $loc > files/$loc.txt
+	head -n $loc /usr/share/dict/words > files/$loc.txt
 done
 
 for CCARGS in '-DDEL_OCC_MMAP' ''; do
@@ -34,7 +39,7 @@ for CCARGS in '-DDEL_OCC_MMAP' ''; do
 			logprefix="logs/client_udp-$loc-$n_cli"
 			rm -f $logprefix-{timings,stdout}.log 
 			for i in `seq 1 $n_cli`; do
-				echo -e "files/$loc.txt\nyolo\n" | $REMBUF ./client_udp localhost $TEST_PORT 2>> $logprefix-timings.log >> $logprefix-stdout.log &
+				echo -e "files/$loc.txt\nABC\n" | $REMBUF ./client_udp localhost $TEST_PORT 2>> $logprefix-timings.log > $logprefix-stdout.log &
 				echo $! > logs/client_udp-$loc-$n_cli-$i.pid 
 			done
 			echo '[+] started udp clients'
@@ -44,6 +49,12 @@ for CCARGS in '-DDEL_OCC_MMAP' ''; do
 				rm logs/client_udp-$loc-$n_cli-$i.pid
 			done
 			echo '[+] clients finished'
+
+			#unit testing
+			if ! sed "s/$PAROLA//g" files/$loc.txt | diff -q $logprefix-stdout.log - > /dev/null; then
+				echo '[-] unit test fallito per loc:' $loc 'n_cli:' $n_cli 
+			fi
+			#manca il test della risposta del server
 			
 			# kill server
 			kill -9 $(cat logs/server-$loc-$n_cli.pid) 
