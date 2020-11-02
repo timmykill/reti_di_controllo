@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -20,6 +22,8 @@
 #define BUF_SIZE 256
 
 int deleteOccurences(char* file, char* word);
+int replace_string_mmap(char* file, char* word);
+void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count);
 
 int main(int argc, char **argv){
 
@@ -68,7 +72,8 @@ int main(int argc, char **argv){
             
             printf("Elimino occorrenze di %s da file %s\n",word,file);
             
-			#if DEL_OCC_MMAP
+			#if REP_STR_MMAP
+			ris = replace_string_mmap(file, word);
 			#else
             ris = deleteOccurences(file, word);
 			#endif
@@ -85,7 +90,8 @@ int main(int argc, char **argv){
 	}
 }
 
-int deleteOccurences(char* file, char* word){
+int deleteOccurences(char* file, char* word)
+{
     int nread=0, i=0, found, j, k, stringLen, wordLen, numW=0, fd, fd_temp;
     char c;
     char buf[BUF_SIZE];
@@ -135,5 +141,42 @@ int deleteOccurences(char* file, char* word){
     remove(file);
     rename("filetemp", file);
     return numW;
-    
+}
+
+void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count)
+{
+	char * start_strstr;
+	start_strstr = strstr(haystack, needle);
+	if (start_strstr){
+		(*count)++;
+		write(outfd, haystack, start_strstr - haystack);
+		multiple_strstr(start_strstr + needlen, haylen - ((start_strstr - haystack) + needlen) ,needle, needlen, outfd, count);
+	} else {
+		write(outfd, haystack, haylen);
+	}
+}
+
+ 
+int replace_string_mmap(char* file, char* word)
+{
+	int orig_fd, temp_fd;
+	struct stat s;
+	size_t size;
+	char * mapped;
+	char * temp_file = "tempfile";
+	int count = 0;
+
+	orig_fd = open(file, O_RDONLY);
+	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+	orig_fd < 0 && die("lettura file, open", -100);
+
+	fstat(orig_fd, &s) < 0 && die("lettura file, fstat", -100);
+	size = s.st_size;
+
+	mapped = mmap (0, size, PROT_READ, MAP_PRIVATE, orig_fd, 0);
+	mapped == MAP_FAILED && die("mmap", -100);
+
+	multiple_strstr(mapped, size, word, strlen(word), temp_fd, &count);
+    rename(temp_file, file);
+	return count; 
 }

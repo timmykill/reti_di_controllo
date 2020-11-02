@@ -1,6 +1,6 @@
 CC = gcc
 LINK = 
-CFLAGS = -g -Wpedantic -Wall -Wextra -Wno-unused-value -Wno-unused-parameter 
+CFLAGS = -g -Wpedantic -Wall -Wextra -Wno-unused-value -Wno-unused-parameter -O2 
 TARGETS = server client_tcp client_udp   
 shared_objects = shared.o
 CFLAGS += ${CCARGS}
