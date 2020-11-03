@@ -209,7 +209,35 @@ void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int
 }
 
  
-int replace_string_mmap(char* file, char* word)
+inline int replace_string_mmap(char* file, char* word)
+{
+	int orig_fd, temp_fd;
+	struct stat s;
+	size_t size;
+	char * mapped;
+	char * temp_file = "tempfile";
+	int count = 0;
+
+	orig_fd = open(file, O_RDONLY);
+	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+	orig_fd < 0 && die("lettura file, open", -100);
+
+	fstat(orig_fd, &s) < 0 && die("lettura file, fstat", -100);
+	size = s.st_size;
+
+	mapped = mmap(0, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, orig_fd, 0);
+	mapped == MAP_FAILED && die("mmap", -100);
+
+	multiple_strstr(mapped, size, word, strlen(word), temp_fd, &count);
+	
+	munmap(mapped, size);
+	close(orig_fd);
+	close(temp_fd);
+    rename(temp_file, file);
+	return count; 
+}
+
+inline int replace_string_read(char* file, char* word)
 {
 	int orig_fd, temp_fd;
 	struct stat s;
