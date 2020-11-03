@@ -98,8 +98,8 @@ int main(int argc, char **argv){
       			}
 			}
 			if (fork() == 0){
-				int message_len;
-				char message[BUF_SIZE];
+				uint32_t msg_len, msg_len_net;
+				char msg[BUF_SIZE];
 				DIR * dir1;
 				char * entry;
 				struct hostent * host;
@@ -113,25 +113,31 @@ int main(int argc, char **argv){
 					printf("Server (figlio): host client e' %s \n", host->h_name);
 				}
 				LOGD("child starting\n");
-				read(socket_conn, &message_len, sizeof(message_len));
-				message_len = ntohl(message_len);
-				read(socket_conn, message, message_len);
-				puts(message);
+				read(socket_conn, &msg_len_net, sizeof(uint32_t));
+				msg_len = ntohl(msg_len_net);
+				LOGD("msg_len: %d\n", msg_len);
+				read(socket_conn, msg, msg_len);
+				LOGD("msg: %s\n", msg);
 				
-				dir1 = opendir(message);
+				dir1 = opendir(msg);
 				if (dir1) {
-					/* inlined strcmp */
-					while ((entry = readdir(dir1)->d_name) && !(entry[0] == '.' && entry[1] == '\0')) {
+					while ((entry = readdir(dir1)->d_name)) {
+						/* inlined strcmp */
+						if (entry[0] == '.' && (entry[1] == '\0' || (entry[1] == '.' && entry[2] == '\0')))
+							continue;
 						LOGD("trovato: %s\n", entry);
-						message_len = htonl(strlen(entry) + 1);
-						write(socket_conn, &message_len, sizeof(message_len));
-						write(socket_conn, entry, message_len);
+						msg_len = strlen(entry) + 1;
+						msg_len_net = htonl(msg_len); 
+						write(socket_conn, &msg_len_net, sizeof(uint32_t));
+						write(socket_conn, entry, msg_len);
 					}
 					closedir(dir1);
+				} else {
+					LOGD("non ho potuto aprire la dir\n");
 				}
 
-				write(socket_conn, 0, sizeof(int));
-
+				/* fine conversazione ?ridondante?*/
+				write(socket_conn, 0, sizeof(uint32_t));
 				LOGD("child ha finito\n");
 				shutdown(socket_conn, 0);
 				shutdown(socket_conn, 1);
