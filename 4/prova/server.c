@@ -23,7 +23,7 @@
 #define BUF_SIZE 256
 
 int deleteOccurences(char* file, char* word);
-int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
+inline int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
 void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count);
 
 int main(int argc, char **argv){
@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds, ris;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
-	int client_addr_len;
+	unsigned int client_addr_len;
 	const int on = 1;
 	fd_set rset;
 
@@ -61,48 +61,51 @@ int main(int argc, char **argv){
 	nfds = MAX(socket_tcp, socket_udp) + 1;
 	client_addr_len = sizeof(client_addr);
 	
-    printf("Server: mi metto in attesa\n");
+	printf("Server: mi metto in attesa\n");
     
 	for(;;){
-		select(nfds, &rset, NULL, NULL, NULL);//controllo necessario
+		LOGD("waiting for select\n");
+		select(nfds, &rset, NULL, NULL, NULL);
+		LOGD("select returned\n");
 		if (FD_ISSET(socket_udp, &rset)){
-            recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);//controllo
+			LOGD("udp is set\n");
+			recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
 			recvfrom(socket_udp, word, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
-            //printf("%s\n",buffer);
-            //char *file = strtok(buffer, " ");
-            //char *word = strtok(NULL, " ");
-            
-            printf("Elimino occorrenze di %s da file %s\n",word,file);
-            
+			printf("Elimino occorrenze di %s da file %s\n",word,file);
+
 			#if REP_STR_MMAP
 			ris = replace_string_mmap(file, word);
 			#else
-            ris = deleteOccurences(file, word);
+			ris = deleteOccurences(file, word);
 			#endif
-            ris=htonl(ris);
+			ris=htonl(ris);
 
-            if(sendto(socket_udp, &ris, sizeof(ris), 0, (struct sockaddr *) &client_addr, client_addr_len) < 0){
-                perror("sendto");
-                continue;
-            }
-			
-		} else if (FD_ISSET(socket_tcp, &rset)){
+			if(sendto(socket_udp, &ris, sizeof(ris), 0, (struct sockaddr *) &client_addr, client_addr_len) < 0){
+				perror("sendto");
+				continue;
+			}
+		}
+		if (FD_ISSET(socket_tcp, &rset)){
 			int socket_conn;
+			LOGD("tcp is set\n");
 			printf("%d\n", socket_tcp);
-			if((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
+			if ((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
 				if (errno == EINTR){
 					perror("Forzo la continuazione della accept");
 					continue;
 				} else {
         			 die("socket tcp", -200);
-      			}
+      				}
 			}
 			if (fork() == 0){
-				int message_len;
-				char message[BUF_SIZE];
-				DIR * dir1;
-				char * entry;
+				uint32_t msg_len, msg_len_net;
+				size_t tmp_sizet;
+				char msg[BUF_SIZE];
+				DIR * dir1, * dir2;
+				char * entry1_name, * entry2_name;
+				struct dirent * entry1, * entry2;
 				struct hostent * host;
+				const int zero = 0;
 
 				close(socket_tcp);
 				host = gethostbyaddr((char *) &client_addr.sin_addr, sizeof(client_addr.sin_addr), AF_INET);
@@ -113,32 +116,90 @@ int main(int argc, char **argv){
 					printf("Server (figlio): host client e' %s \n", host->h_name);
 				}
 				LOGD("child starting\n");
-				read(socket_conn, &message_len, sizeof(message_len));
-				message_len = ntohl(message_len);
-				read(socket_conn, message, message_len);
-				puts(message);
+				read(socket_conn, &msg_len_net, sizeof(uint32_t));
+				msg_len = ntohl(msg_len_net);
+				LOGD("msg_len: %d\n", msg_len);
+				read(socket_conn, msg, msg_len);
+				LOGD("msg: %s\n", msg);
 				
-				dir1 = opendir(message);
+				dir1 = opendir(msg);
+				/* we ar gonna need this in lv2 */
+				tmp_sizet = msg_len;
 				if (dir1) {
-					/* inlined strcmp */
-					while ((entry = readdir(dir1)->d_name) && !(entry[0] == '.' && entry[1] == '\0')) {
-						LOGD("trovato: %s\n", entry);
-						message_len = htonl(strlen(entry) + 1);
-						write(socket_conn, &message_len, sizeof(message_len));
-						write(socket_conn, entry, message_len);
+					while ((entry1 = readdir(dir1))) {
+						/* inlined strcmp */
+						entry1_name = entry1->d_name;
+						if (entry1_name[0] == '.' && (entry1_name[1] == '\0' || (entry1_name[1] == '.' && entry1_name[2] == '\0')))
+							continue;
+						LOGD("--> %s\n", entry1_name);
+						if (entry1->d_type == DT_DIR){
+							/*
+							 * reusing the buffer and buffer len since its not used anymore
+							 * this might be a very bad idea, but it saves on heap allocation
+							 */
+							msg_len = strlen(entry1_name) + strlen(msg) + 1;
+							if (msg_len > BUF_SIZE){
+								LOGD("Implement heap allocation or increase BUF_SIZE\n");
+								continue;
+							}
+
+							LOGD("%d\n", tmp_sizet);
+							msg_len = strlen(entry1_name) + 1;
+							/* keeping \0 */
+							memcpy(msg + tmp_sizet, entry1_name, msg_len);
+							#ifdef SHOW_LV1_DIR
+							msg_len_net = htonl(msg_len);
+							LOGD("SENDING msg: %s, msg_len: %d\n", entry1_name, msg_len);
+							write(socket_conn, &msg_len_net, sizeof(uint32_t));
+							write(socket_conn, entry1_name, msg_len);
+							#endif
+							msg[tmp_sizet - 1] = '/';
+							LOGD("dir: %s\n", msg);
+							dir2 = opendir(msg);
+							if (dir2) {
+								while ((entry2 = readdir(dir2))) {
+									/* inlined strcmp */
+									entry2_name = entry2->d_name;
+									if (entry2_name[0] == '.' && (entry2_name[1] == '\0' || (entry2_name[1] == '.' && entry2_name[2] == '\0')))
+										continue;
+									LOGD("-->--> %s\n", entry2_name);
+									msg_len = strlen(entry2_name) + 1;
+									msg_len_net = htonl(msg_len); 
+									write(socket_conn, &msg_len_net, sizeof(uint32_t));
+									write(socket_conn, entry2_name, msg_len);
+								}
+							} else {
+								LOGD("non ho potuto aprire la dir lv2\n");
+							}
+						#ifdef SHOW_LV1_ENTRIES
+						} else {
+							msg_len = strlen(entry1_name) + 1;
+							msg_len_net = htonl(msg_len); 
+							write(socket_conn, &msg_len_net, sizeof(uint32_t));
+							write(socket_conn, entry1_name, msg_len);
+						}
+						#else
+						}
+						#endif
 					}
 					closedir(dir1);
+				} else {
+					LOGD("non ho potuto aprire la dir\n");
 				}
-
-				write(socket_conn, 0, sizeof(int));
-
-				LOGD("child ha finito\n");
+				
+				LOGD("child ha finito1\n");
+				/* fine conversazione ?ridondante?*/
+				write(socket_conn, &zero, sizeof(uint32_t));
+				LOGD("child ha finito2\n");
 				shutdown(socket_conn, 0);
 				shutdown(socket_conn, 1);
 				close(socket_conn);
 				exit(1);
 			}
 		}
+		FD_ZERO(&rset);
+		FD_SET(socket_udp, &rset);
+		FD_SET(socket_tcp, &rset);
 	}
 }
 
@@ -155,7 +216,7 @@ int deleteOccurences(char* file, char* word)
 	}
     while((nread=read(fd,&c,sizeof(c)))>0){
         
-        if(c!='\n'&&i<BUF_SIZE-1){
+        if(i<BUF_SIZE-1){
             buf[i]=c;
             i++;
             continue;
@@ -190,7 +251,8 @@ int deleteOccurences(char* file, char* word)
             i=1;
             buf[0]=c;}
     }
-    remove(file);
+	close(fd);
+	close(fd_temp);
     rename("filetemp", file);
     return numW;
 }
@@ -261,6 +323,6 @@ inline int replace_string_read(char* file, char* word)
 	munmap(mapped, size);
 	close(orig_fd);
 	close(temp_fd);
-    rename(temp_file, file);
+	rename(temp_file, file);
 	return count; 
 }

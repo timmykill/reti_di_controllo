@@ -14,7 +14,7 @@
 #define BUFF_LEN 1024
 int main(int argc, char *argv[])
 {
-	int fd_socket, port, nread, msg_len;
+	int fd_socket, port, nread, msg_len, msg_len_net;
 	char buf[BUFF_LEN];
 	struct hostent *host;
 	struct sockaddr_in servaddr;
@@ -54,20 +54,23 @@ int main(int argc, char *argv[])
 		connect(fd_socket,(struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0 && die("connect", -101);
 
 		msg_len = strlen(buf) + 1;
-		msg_len = htonl(msg_len);
-		write(fd_socket, &msg_len, sizeof(msg_len));
+		msg_len_net = htonl(msg_len);
+		write(fd_socket, &msg_len_net, sizeof(uint32_t));
 		write(fd_socket, buf, msg_len);
+		LOGD("SENDING msg: %s msg_len: %d\n", buf, msg_len);
 
-		read(fd_socket, &msg_len, sizeof(msg_len));
-		msg_len = ntohl(msg_len);
+		read(fd_socket, &msg_len_net, sizeof(uint32_t));
+		msg_len = ntohl(msg_len_net);
+		LOGD("RECIVED msg_len %d\n", msg_len);
 
-		while (!msg_len){
-			LOGD("trovato, size: %d\n", msg_len);
+		while (msg_len){
 			read(fd_socket, buf, BUFF_LEN);
-			printf("%s\n", buf);
-			read(fd_socket, &msg_len, sizeof(msg_len));
-			msg_len = ntohl(msg_len);
+			printf("RECIVED %s\n", buf);
+			read(fd_socket, &msg_len_net, sizeof(uint32_t));
+			msg_len = ntohl(msg_len_net);
 		}
+		
+		LOGD("fine trasmissione\n");
 
 		shutdown(fd_socket, 0);
 		shutdown(fd_socket, 1);
