@@ -1,9 +1,10 @@
 CC = gcc
 LINK = 
-CFLAGS = -g -Wpedantic -Wall -Wextra -Wno-unused-value -Wno-unused-parameter -O2 
+CFLAGS = -g -Wpedantic -Wall -Wextra -Wno-unused-value -Wno-unused-parameter -O2 -Wno-unused-result 
+DECLARED = -DSHOW_LV1_DIR -DSHOW_LV1_ENTRIES
 TARGETS = server client_tcp client_udp   
 shared_objects = shared.o
-CFLAGS += ${CCARGS}
+CFLAGS += ${CCARGS} ${DECLARED}
 
 test: CFLAGS += -DTEST
 test: $(TARGETS)

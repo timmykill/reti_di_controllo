@@ -57,14 +57,15 @@ int main(int argc, char *argv[])
 		msg_len_net = htonl(msg_len);
 		write(fd_socket, &msg_len_net, sizeof(uint32_t));
 		write(fd_socket, buf, msg_len);
-		LOGD("msg: %s msg_len: %d\n", buf, msg_len);
+		LOGD("SENDING msg: %s msg_len: %d\n", buf, msg_len);
 
 		read(fd_socket, &msg_len_net, sizeof(uint32_t));
 		msg_len = ntohl(msg_len_net);
+		LOGD("RECIVED msg_len %d\n", msg_len);
 
-		while (!msg_len){
+		while (msg_len){
 			read(fd_socket, buf, BUFF_LEN);
-			printf("%s\n", buf);
+			printf("RECIVED %s\n", buf);
 			read(fd_socket, &msg_len_net, sizeof(uint32_t));
 			msg_len = ntohl(msg_len_net);
 		}

@@ -23,7 +23,7 @@
 #define BUF_SIZE 256
 
 int deleteOccurences(char* file, char* word);
-int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
+inline int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
 void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count);
 
 int main(int argc, char **argv){
@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds, ris;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
-	int client_addr_len;
+	unsigned int client_addr_len;
 	const int on = 1;
 	fd_set rset;
 
@@ -99,10 +99,13 @@ int main(int argc, char **argv){
 			}
 			if (fork() == 0){
 				uint32_t msg_len, msg_len_net;
+				size_t tmp_sizet;
 				char msg[BUF_SIZE];
-				DIR * dir1;
-				char * entry;
+				DIR * dir1, * dir2;
+				char * entry1_name, * entry2_name;
+				struct dirent * entry1, * entry2;
 				struct hostent * host;
+				const int zero = 0;
 
 				close(socket_tcp);
 				host = gethostbyaddr((char *) &client_addr.sin_addr, sizeof(client_addr.sin_addr), AF_INET);
@@ -120,25 +123,74 @@ int main(int argc, char **argv){
 				LOGD("msg: %s\n", msg);
 				
 				dir1 = opendir(msg);
+				/* we ar gonna need this in lv2 */
+				tmp_sizet = msg_len;
 				if (dir1) {
-					while ((entry = readdir(dir1)->d_name)) {
+					while ((entry1 = readdir(dir1))) {
 						/* inlined strcmp */
-						if (entry[0] == '.' && (entry[1] == '\0' || (entry[1] == '.' && entry[2] == '\0')))
+						entry1_name = entry1->d_name;
+						if (entry1_name[0] == '.' && (entry1_name[1] == '\0' || (entry1_name[1] == '.' && entry1_name[2] == '\0')))
 							continue;
-						LOGD("trovato: %s\n", entry);
-						msg_len = strlen(entry) + 1;
-						msg_len_net = htonl(msg_len); 
-						write(socket_conn, &msg_len_net, sizeof(uint32_t));
-						write(socket_conn, entry, msg_len);
+						LOGD("--> %s\n", entry1_name);
+						if (entry1->d_type == DT_DIR){
+							/*
+							 * reusing the buffer and buffer len since its not used anymore
+							 * this might be a very bad idea, but it saves on heap allocation
+							 */
+							msg_len = strlen(entry1_name) + strlen(msg) + 1;
+							if (msg_len > BUF_SIZE){
+								LOGD("Implement heap allocation or increase BUF_SIZE\n");
+								continue;
+							}
+
+							LOGD("%d\n", tmp_sizet);
+							msg_len = strlen(entry1_name) + 1;
+							/* keeping \0 */
+							memcpy(msg + tmp_sizet, entry1_name, msg_len);
+							#ifdef SHOW_LV1_DIR
+							msg_len_net = htonl(msg_len);
+							LOGD("SENDING msg: %s, msg_len: %d\n", entry1_name, msg_len);
+							write(socket_conn, &msg_len_net, sizeof(uint32_t));
+							write(socket_conn, entry1_name, msg_len);
+							#endif
+							msg[tmp_sizet - 1] = '/';
+							LOGD("dir: %s\n", msg);
+							dir2 = opendir(msg);
+							if (dir2) {
+								while ((entry2 = readdir(dir2))) {
+									/* inlined strcmp */
+									entry2_name = entry2->d_name;
+									if (entry2_name[0] == '.' && (entry2_name[1] == '\0' || (entry2_name[1] == '.' && entry2_name[2] == '\0')))
+										continue;
+									LOGD("-->--> %s\n", entry2_name);
+									msg_len = strlen(entry2_name) + 1;
+									msg_len_net = htonl(msg_len); 
+									write(socket_conn, &msg_len_net, sizeof(uint32_t));
+									write(socket_conn, entry2_name, msg_len);
+								}
+							} else {
+								LOGD("non ho potuto aprire la dir lv2\n");
+							}
+						#ifdef SHOW_LV1_ENTRIES
+						} else {
+							msg_len = strlen(entry1_name) + 1;
+							msg_len_net = htonl(msg_len); 
+							write(socket_conn, &msg_len_net, sizeof(uint32_t));
+							write(socket_conn, entry1_name, msg_len);
+						}
+						#else
+						}
+						#endif
 					}
 					closedir(dir1);
 				} else {
 					LOGD("non ho potuto aprire la dir\n");
 				}
-
+				
+				LOGD("child ha finito1\n");
 				/* fine conversazione ?ridondante?*/
-				write(socket_conn, 0, sizeof(uint32_t));
-				LOGD("child ha finito\n");
+				write(socket_conn, &zero, sizeof(uint32_t));
+				LOGD("child ha finito2\n");
 				shutdown(socket_conn, 0);
 				shutdown(socket_conn, 1);
 				close(socket_conn);
