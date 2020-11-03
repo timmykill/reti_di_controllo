@@ -61,41 +61,41 @@ int main(int argc, char **argv){
 	nfds = MAX(socket_tcp, socket_udp) + 1;
 	client_addr_len = sizeof(client_addr);
 	
-    printf("Server: mi metto in attesa\n");
+	printf("Server: mi metto in attesa\n");
     
 	for(;;){
-		select(nfds, &rset, NULL, NULL, NULL);//controllo necessario
+		LOGD("waiting for select\n");
+		select(nfds, &rset, NULL, NULL, NULL);
+		LOGD("select returned\n");
 		if (FD_ISSET(socket_udp, &rset)){
-            recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);//controllo
+			LOGD("udp is set\n");
+			recvfrom(socket_udp, file, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
 			recvfrom(socket_udp, word, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
-            //printf("%s\n",buffer);
-            //char *file = strtok(buffer, " ");
-            //char *word = strtok(NULL, " ");
-            
-            printf("Elimino occorrenze di %s da file %s\n",word,file);
-            
+			printf("Elimino occorrenze di %s da file %s\n",word,file);
+
 			#if REP_STR_MMAP
 			ris = replace_string_mmap(file, word);
 			#else
-            ris = deleteOccurences(file, word);
+			ris = deleteOccurences(file, word);
 			#endif
-            ris=htonl(ris);
+			ris=htonl(ris);
 
-            if(sendto(socket_udp, &ris, sizeof(ris), 0, (struct sockaddr *) &client_addr, client_addr_len) < 0){
-                perror("sendto");
-                continue;
-            }
-			
-		} else if (FD_ISSET(socket_tcp, &rset)){
+			if(sendto(socket_udp, &ris, sizeof(ris), 0, (struct sockaddr *) &client_addr, client_addr_len) < 0){
+				perror("sendto");
+				continue;
+			}
+		}
+		if (FD_ISSET(socket_tcp, &rset)){
 			int socket_conn;
+			LOGD("tcp is set\n");
 			printf("%d\n", socket_tcp);
-			if((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
+			if ((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
 				if (errno == EINTR){
 					perror("Forzo la continuazione della accept");
 					continue;
 				} else {
         			 die("socket tcp", -200);
-      			}
+      				}
 			}
 			if (fork() == 0){
 				uint32_t msg_len, msg_len_net;
@@ -197,6 +197,9 @@ int main(int argc, char **argv){
 				exit(1);
 			}
 		}
+		FD_ZERO(&rset);
+		FD_SET(socket_udp, &rset);
+		FD_SET(socket_tcp, &rset);
 	}
 }
 
@@ -213,7 +216,7 @@ int deleteOccurences(char* file, char* word)
 	}
     while((nread=read(fd,&c,sizeof(c)))>0){
         
-        if(c!='\n'&&i<BUF_SIZE-1){
+        if(i<BUF_SIZE-1){
             buf[i]=c;
             i++;
             continue;
@@ -248,7 +251,8 @@ int deleteOccurences(char* file, char* word)
             i=1;
             buf[0]=c;}
     }
-    remove(file);
+	close(fd);
+	close(fd_temp);
     rename("filetemp", file);
     return numW;
 }
@@ -291,6 +295,6 @@ int replace_string_mmap(char* file, char* word)
 	munmap(mapped, size);
 	close(orig_fd);
 	close(temp_fd);
-    rename(temp_file, file);
+	rename(temp_file, file);
 	return count; 
 }
