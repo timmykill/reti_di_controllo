@@ -21,7 +21,9 @@
 #include "shared.h"
 
 #define BUF_SIZE 256
+#ifndef MANUAL_READ_BUF_SIZE
 #define READ_BUF_SIZE 4096
+#endif
 
 inline int deleteOccurences(char* file, char* word) __attribute__((always_inline));
 inline int replace_string_mmap(char* file, char* word);

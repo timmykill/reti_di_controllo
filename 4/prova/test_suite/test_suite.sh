@@ -1,16 +1,14 @@
 #! /bin/bash
 
 TEST_PORT=65111
-LOC_TESTS="1000"
+LOC_TESTS="1000 1000000 1000000000"
+#FILES_TESTS="1000 1000000 1000000000"
+FILES_TESTS="100"
 CLIENT_TESTS="1"
 REMBUF="stdbuf -i0 -o0 -e0"
 PAROLA="Antigone"
 
 
-# Generate random files
-#for loc in $LOC_TESTS; do
-#	seq 1 100 | xargs -Inone cat /usr/share/dict/words | shuf | head -n $loc > files/$loc.txt
-#done
 for loc in $LOC_TESTS; do
 	TEMPFILE=$(mktemp)
 	for i in `seq 1000`; do
@@ -20,13 +18,13 @@ for loc in $LOC_TESTS; do
 	rm $TEMPFILE
 done
 
-
-for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
+# udp
+for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ' '-DREP_STR_READ -DMANUAL_READ_BUF_SIZE' '-DREP_STR_READ -DMANUAL_READ_BUF_SIZE -DREAD_BUF_SIZE=8192' '-DREP_STR_READ -DMANUAL_READ_BUF_SIZE -DREAD_BUF_SIZE=16384'; do
 	export CCARGS
 	make purge > /dev/null 2>&1 
-	make test > /dev/null 2> logs/compilation_$CCARGS.log
+	make test > /dev/null 2> logs/compilation_"$CCARGS".log
 	if test $? -eq 0; then
-		echo '[+] compilazione terminata con flag ' $CCARGS
+		echo '[+] compilazione terminata con flag ' "$CCARGS"
 	else
 		echo '[-] qualcosa è andato storto, controlla il log di compilazione'
 		echo 'waiting per continuare...'
@@ -41,7 +39,6 @@ for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
 			echo $! > logs/server-$loc-$n_cli.pid 
 			echo '[+] server in funzione' 
 			
-			# udp
 			logprefix="logs/client_udp-$CCARGS-$loc-$n_cli"
 			rm -f $logprefix-{timings,stdout}.log 
 			for i in `seq 1 $n_cli`; do
@@ -64,23 +61,52 @@ for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
 			#manca il test della risposta del server
 			cat $logprefix-stdout.log | grep occorrenze
 			
-#			# tcp
-#			logprefix="logs/client_tcp-$CCARGS-$loc-$n_cli"
-#			rm -f $logprefix-{timings,stdout}.log 
-#			for i in `seq 1 $n_cli`; do
-#				echo -e "files/$loc.txt\n$PAROLA\n" | $REMBUF ./client_tcp localhost $TEST_PORT 2>> $logprefix-timings.log > $logprefix-stdout.log &
-#				echo $! > logs/client_tcp-$loc-$n_cli-$i.pid 
-#			done
-#			echo '[+] started tcp clients'
-#
-#			for i in `seq 1 $n_cli`; do
-#				wait $(cat logs/client_tcp-$loc-$n_cli-$i.pid)
-#				rm logs/client_tcp-$loc-$n_cli-$i.pid
-#			done
-#			echo '[+] clients finished'
-			
 			# kill server
 			kill -9 $(cat logs/server-$loc-$n_cli.pid) 
+			echo '[+] killed server'
+		done
+	done
+done
+
+exit
+
+#tcp
+for CCARGS in ''; do
+	export CCARGS
+	make purge > /dev/null 2>&1 
+	make test > /dev/null 2> logs/compilation_"$CCARGS".log
+	if test $? -eq 0; then
+		echo '[+] compilazione terminata con flag ' "$CCARGS"
+	else
+		echo '[-] qualcosa è andato storto, controlla il log di compilazione'
+		echo 'waiting per continuare...'
+		read 
+	fi
+	for files in $FILES_TESTS; do
+		for n_cli in $CLIENT_TESTS; do
+			cp files/$files-orig.txt files/$files.txt
+			#start server
+			logprefix="logs/server-$CCARGS-$files-$n_cli"
+			$REMBUF ./server $TEST_PORT 2> $logprefix-timings.log > $logprefix-stdout.log & 
+			echo $! > logs/server-$files-$n_cli.pid 
+			echo '[+] server in funzione' 
+			
+			logprefix="logs/client_tpc-$CCARGS-$files-$n_cli"
+			rm -f $logprefix-{timings,stdout}.log 
+			for i in `seq 1 $n_cli`; do
+				echo -e "files/$files.txt\n$PAROLA\n" | $REMBUF ./client_tpc filesalhost $TEST_PORT 2>> $logprefix-timings.log > $logprefix-stdout.log &
+				echo $! > logs/client_tpc-$files-$n_cli-$i.pid 
+			done
+			echo '[+] started tpc clients'
+
+			for i in `seq 1 $n_cli`; do
+				wait $(cat logs/client_tpc-$files-$n_cli-$i.pid)
+				rm logs/client_tpc-$files-$n_cli-$i.pid
+			done
+			echo '[+] clients finished'
+			
+			# kill server
+			kill -9 $(cat logs/server-$files-$n_cli.pid) 
 			echo '[+] killed server'
 		done
 	done
