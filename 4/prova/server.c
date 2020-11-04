@@ -159,7 +159,7 @@ int main(int argc, char **argv){
 						if (entry1->d_type == DT_DIR){
 							/*
 							 * reusing the buffer and buffer len since its not used anymore
-							 * this might be a very bad idea, but it saves on heap allocation
+							 * this might be a very bad idea, but it saves on allocation
 							 */
 							msg_len = strlen(entry1_name) + strlen(msg) + 1;
 							if (msg_len > BUF_SIZE){
@@ -189,6 +189,7 @@ int main(int argc, char **argv){
 									LOGD("-->--> %s\n", entry2_name);
 									msg_len = strlen(entry2_name) + 1;
 									msg_len_net = htonl(msg_len); 
+									LOGD("SENDING msg: %s, msg_len: %d\n", entry2_name, msg_len);
 									write(socket_conn, &msg_len_net, sizeof(uint32_t));
 									write(socket_conn, entry2_name, msg_len);
 								}
@@ -199,6 +200,7 @@ int main(int argc, char **argv){
 						} else {
 							msg_len = strlen(entry1_name) + 1;
 							msg_len_net = htonl(msg_len); 
+							LOGD("SENDING msg: %s, msg_len: %d\n", entry1_name, msg_len);
 							write(socket_conn, &msg_len_net, sizeof(uint32_t));
 							write(socket_conn, entry1_name, msg_len);
 						}

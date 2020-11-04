@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 		LOGD("RECIVED msg_len %d\n", msg_len);
 
 		while (msg_len){
-			read(fd_socket, buf, BUFF_LEN);
+			read(fd_socket, buf, msg_len);
 			printf("RECIVED %s\n", buf);
 			read(fd_socket, &msg_len_net, sizeof(uint32_t));
 			msg_len = ntohl(msg_len_net);
