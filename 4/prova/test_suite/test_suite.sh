@@ -4,7 +4,7 @@ TEST_PORT=65111
 LOC_TESTS="1000"
 CLIENT_TESTS="1"
 REMBUF="stdbuf -i0 -o0 -e0"
-PAROLA="Antoine"
+PAROLA="Antigone"
 
 
 # Generate random files

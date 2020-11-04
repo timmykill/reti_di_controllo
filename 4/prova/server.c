@@ -17,6 +17,7 @@
 #include <sys/types.h> 
 #include <sys/wait.h>
 #include <sys/select.h>
+#include <stdbool.h>
 
 #include "shared.h"
 
@@ -30,7 +31,7 @@ inline void multiple_strstr(char * haystack, int haylen, char* needle, int needl
 
 int main(int argc, char **argv){
 
-	int socket_udp, socket_tcp, port, queue_tcp = 100, nfds, ris, nread;
+	int socket_udp, socket_tcp, port, queue_tcp = 100, nfds, ris, nread, socket_conn;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
 	unsigned int client_addr_len;
@@ -110,7 +111,6 @@ int main(int argc, char **argv){
 			}
 		}
 		if (FD_ISSET(socket_tcp, &rset)){
-			int socket_conn;
 			LOGD("tcp is set\n");
 			printf("%d\n", socket_tcp);
 			if ((socket_conn = accept(socket_tcp, (struct sockaddr *) &client_addr, &client_addr_len)) < 0){
@@ -333,6 +333,9 @@ inline int replace_string_read(char* file, char* word)
 	char buf[READ_BUF_SIZE];
 	char * temp_file = "tempfile";
 	int count = 0;
+	unsigned int i, j, start_from_edge, alredy_checked_len, remaining_len;
+	char * edge_buf;
+	bool same = false;
 
 	orig_fd = open(file, O_RDONLY);
 	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
@@ -340,11 +343,8 @@ inline int replace_string_read(char* file, char* word)
 	temp_fd < 0 && die("lettura file, open", -100);
 	
 	word_len = strlen(word);
+	word_len >= READ_BUF_SIZE && die("buffer read troppo piccolo", -100);
 	while ((buf_len = read(orig_fd, buf, READ_BUF_SIZE)) > 0) {
-		int i, start_from_edge;
-		char * edge_buf;
-
-		bool same = false;
 		multiple_strstr(buf, buf_len, word, word_len, temp_fd, &count);
 		
 		/* this sould have a len of word_len - 1 */
@@ -353,7 +353,7 @@ inline int replace_string_read(char* file, char* word)
 			if (edge_buf[i] == word[0]){
 				same = true;
 				start_from_edge = i;
-				for (j = 0, i < word_len - 1 && same == true; j++){
+				for (j = 0; i < word_len - 1 && same == true; j++){
 					if (edge_buf[i + j] != word[j]){
 						same = false;
 					}
