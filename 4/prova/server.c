@@ -23,8 +23,8 @@
 #define BUF_SIZE 256
 #define READ_BUF_SIZE 4096
 
-int deleteOccurences(char* file, char* word);
-inline int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
+inline int deleteOccurences(char* file, char* word) __attribute__((always_inline));
+inline int replace_string_mmap(char* file, char* word);
 inline int replace_string_read(char* file, char* word) __attribute__((always_inline));
 inline void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count) __attribute__((always_inline));
 
@@ -118,8 +118,8 @@ int main(int argc, char **argv){
 					perror("Forzo la continuazione della accept");
 					continue;
 				} else {
-        			 die("socket tcp", -200);
-      				}
+					 die("socket tcp", -200);
+					}
 			}
 			if (fork() == 0){
 				uint32_t msg_len, msg_len_net;
@@ -229,35 +229,37 @@ int main(int argc, char **argv){
 	}
 }
 
-int deleteOccurences(char* file, char* word){
-    int nread = 0, i = 0, found, j, k, stringLen, wordLen, numW = 0, fd, fd_temp;
-    char c;
-    char buf[256];
+inline int deleteOccurences(char* file, char* word)
+{
+	int nread = 0, i = 0, numW = 0, fd, fd_temp;
+	char c;
+	char buf[256]; 
 	fd = open(file, O_RDONLY);
 	fd_temp = open("filetemp.txt", O_WRONLY|O_CREAT|O_TRUNC, 0777);
 	if(fd < 0 || fd_temp < 0){
 		puts("something went wrong opening the file\n");
 		return -1;
 	}
-    while((nread = read(fd, &c, 1)) > 0){
+	while((nread = read(fd, &c, 1)) > 0){
+		i >= 256 && die("parola più grande del buffer, deleteOccurences", -100);
 		if((c == ' ') || (c == '\n')){
-            buf[i] = '\0';
+			buf[i] = '\0';
 			if(strcmp(buf, word) == 0){
 				numW++;
 			}else{
-                buf[i] = c;
-                buf[i + 1] = '\0';
+				buf[i] = c;
+				buf[i + 1] = '\0';
 				write(fd_temp, buf, i + 1);
 			}
 			i = 0;
 		}else{
 			buf[i] = c;
-            i++;
-        }
-    }
-    close(fd);
+			i++;
+		}
+	}
+	close(fd);
 	close(fd_temp);
-    return numW;
+	return numW;
 }
 
 void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count)
@@ -299,7 +301,7 @@ inline int replace_string_mmap(char* file, char* word)
 	munmap(mapped, size);
 	close(orig_fd);
 	close(temp_fd);
-    rename(temp_file, file);
+	rename(temp_file, file);
 	return count;
 }
 
