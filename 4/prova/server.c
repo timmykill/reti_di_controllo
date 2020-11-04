@@ -341,8 +341,36 @@ inline int replace_string_read(char* file, char* word)
 	
 	word_len = strlen(word);
 	while ((buf_len = read(orig_fd, buf, READ_BUF_SIZE)) > 0) {
+		int i, start_from_edge;
+		char * edge_buf;
+
+		bool same = false;
 		multiple_strstr(buf, buf_len, word, word_len, temp_fd, &count);
-		/* to implement edge cases */
+		
+		/* this sould have a len of word_len - 1 */
+		edge_buf = buf + buf_len + 1 - word_len;
+		for (i = 0; i < word_len - 1 && same == false; i++){
+			if (edge_buf[i] == word[0]){
+				same = true;
+				start_from_edge = i;
+				for (j = 0, i < word_len - 1 && same == true; j++){
+					if (edge_buf[i + j] != word[j]){
+						same = false;
+					}
+				}
+			}
+		}
+		if (same == true){
+			remaining_len = start_from_edge + 1;
+			alredy_checked_len = word_len - remaining_len;
+			buf_len = read(orig_fd, buf, remaining_len);
+			if (buf_len == remaining_len && !memcmp(buf, word + alredy_checked_len, remaining_len)){
+				lseek(temp_fd, -alredy_checked_len, SEEK_CUR);	
+			} else {
+				/* can i write zero bytes? */
+				write(temp_fd, buf, buf_len);
+			}
+		}
 	}
 	
 	close(orig_fd);
