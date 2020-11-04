@@ -4,7 +4,7 @@ TEST_PORT=65111
 LOC_TESTS="1000"
 CLIENT_TESTS="1"
 REMBUF="stdbuf -i0 -o0 -e0"
-PAROLA="hello"
+PAROLA="Antoine"
 
 
 # Generate random files
@@ -55,7 +55,7 @@ for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
 				rm logs/client_udp-$loc-$n_cli-$i.pid
 			done
 			echo '[+] clients finished'
-
+			
 			#unit testing
 			if ! sed "s/$PAROLA//g" files/$loc-orig.txt | diff -q files/$loc.txt - > /dev/null; then
 				echo '[-] unit test fallito per loc:' $loc 'n_cli:' $n_cli 
@@ -63,6 +63,21 @@ for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
 			fi
 			#manca il test della risposta del server
 			cat $logprefix-stdout.log | grep occorrenze
+			
+#			# tcp
+#			logprefix="logs/client_tcp-$CCARGS-$loc-$n_cli"
+#			rm -f $logprefix-{timings,stdout}.log 
+#			for i in `seq 1 $n_cli`; do
+#				echo -e "files/$loc.txt\n$PAROLA\n" | $REMBUF ./client_tcp localhost $TEST_PORT 2>> $logprefix-timings.log > $logprefix-stdout.log &
+#				echo $! > logs/client_tcp-$loc-$n_cli-$i.pid 
+#			done
+#			echo '[+] started tcp clients'
+#
+#			for i in `seq 1 $n_cli`; do
+#				wait $(cat logs/client_tcp-$loc-$n_cli-$i.pid)
+#				rm logs/client_tcp-$loc-$n_cli-$i.pid
+#			done
+#			echo '[+] clients finished'
 			
 			# kill server
 			kill -9 $(cat logs/server-$loc-$n_cli.pid) 

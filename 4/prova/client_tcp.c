@@ -18,6 +18,9 @@ int main(int argc, char *argv[])
 	char buf[BUFF_LEN];
 	struct hostent *host;
 	struct sockaddr_in servaddr;
+	#ifdef TEST
+	struct timespec start, end;
+	#endif
 
 	if(argc!=3){
 		printf("Usage: %s serverAddress serverPort\n", argv[0]);
@@ -50,6 +53,9 @@ int main(int argc, char *argv[])
 	servaddr.sin_port = htons(port);
 
 	while (scanf("%s", buf)){
+		#ifdef TEST
+		save_time(&start);
+		#endif
 		(fd_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0 && die("apertura socket", -100);
 		connect(fd_socket,(struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0 && die("connect", -101);
 
@@ -69,6 +75,11 @@ int main(int argc, char *argv[])
 			read(fd_socket, &msg_len_net, sizeof(uint32_t));
 			msg_len = ntohl(msg_len_net);
 		}
+		
+		#ifdef TEST
+		save_time(&end);
+		print_delta(start, end);
+		#endif
 		
 		LOGD("fine trasmissione\n");
 

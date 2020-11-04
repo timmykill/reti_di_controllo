@@ -17,6 +17,9 @@ int main(int argc, char **argv){
 	int  port, sd, num1, ris;
 	unsigned int len;
 	char nome_file[LINE_LENGTH], word[LINE_LENGTH];
+	#ifdef TEST
+	struct timespec start, end;
+	#endif
 		
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
@@ -68,7 +71,9 @@ int main(int argc, char **argv){
 	/* CORPO DEL CLIENT: ciclo di accettazione di richieste da utente */
 	printf("Inserire nome file: \n");
 	while ((scanf("%s", nome_file)) != EOF ){
-		struct timespec start, finish;
+		#ifdef TEST
+		save_time(&start);
+		#endif
 		/* richiesta operazione */
 		len = sizeof(servaddr);
 		if(sendto(sd, &nome_file, strlen(nome_file) + 1, 0, (struct sockaddr *)&servaddr, len) < 0){
@@ -82,22 +87,17 @@ int main(int argc, char **argv){
 			perror("sendto");
 			continue;
 		}
-		#ifdef TEST
-		printf("nome file: '%s'\nparola: '%s'\n", nome_file, word);;
-		#endif
+		LOGD("nome file: '%s'\nparola: '%s'\n", nome_file, word);;
 
-		#ifdef TEST
-		save_time(&start);
-		#endif
 		/* ricezione del risultato */
 		printf("Attesa del risultato...\n");
-		if (recvfrom(sd, &ris, sizeof(ris), 0, (struct sockaddr *)&servaddr, &len) < 0){//risp se il file c'è o no
+		if (recvfrom(sd, &ris, sizeof(ris), 0, (struct sockaddr *)&servaddr, &len) < 0){
 			perror("recvfrom");
 			continue;
 		}
 		#ifdef TEST
-		save_time(&finish);//stampa dopo quanto tempo dopo la richiesta è arrivata la risposta
-		print_delta(start, finish);
+		save_time(&end);
+		print_delta(start, end);
 		#endif
 
 		ris = ntohl(ris);
@@ -109,8 +109,6 @@ int main(int argc, char **argv){
 		}
 	}
 
-	//CLEAN OUT
 	close(sd);
-	//printf("\nClient: termino...\n");
 	exit(0);
 }
