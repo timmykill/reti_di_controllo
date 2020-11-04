@@ -327,7 +327,7 @@ inline int replace_string_mmap(char* file, char* word)
 inline int replace_string_read(char* file, char* word)
 {
 	int orig_fd, temp_fd;
-	size_t word_len;
+	size_t word_len, buf_len;
 	char buf[READ_BUF_SIZE];
 	char * temp_file = "tempfile";
 	int count = 0;
@@ -336,12 +336,11 @@ inline int replace_string_read(char* file, char* word)
 	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	orig_fd < 0 && die("lettura file, open", -100);
 	temp_fd < 0 && die("lettura file, open", -100);
-
+	
 	word_len = strlen(word);
-	while (read(orig_fd, buf, READ_BUF_SIZE) > 0) {
-		multiple_strstr(buf, READ_BUF_SIZE, word, word_len, temp_fd, &count);
-		/* edge cases */
-		lseek(orig_fd, -word_len, SEEK_CUR);
+	while ((buf_len = read(orig_fd, buf, READ_BUF_SIZE)) > 0) {
+		multiple_strstr(buf, buf_len, word, word_len, temp_fd, &count);
+		/* to implement edge cases */
 	}
 	
 	close(orig_fd);
