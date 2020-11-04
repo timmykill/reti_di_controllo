@@ -21,19 +21,41 @@
 #include "shared.h"
 
 #define BUF_SIZE 256
+#define READ_BUF_SIZE 4096
 
 int deleteOccurences(char* file, char* word);
 inline int replace_string_mmap(char* file, char* word) __attribute__((always_inline));
-void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count);
+inline int replace_string_read(char* file, char* word) __attribute__((always_inline));
+inline void multiple_strstr(char * haystack, int haylen, char* needle, int needlen, int outfd, int * count) __attribute__((always_inline));
 
 int main(int argc, char **argv){
 
-	int socket_udp, socket_tcp, port = 65111, queue_tcp = 100, nfds, ris;
+	int socket_udp, socket_tcp, port, queue_tcp = 100, nfds, ris, nread;
 	struct sockaddr_in client_addr, server_addr;
 	char file[BUF_SIZE], word[BUF_SIZE];
 	unsigned int client_addr_len;
 	const int on = 1;
 	fd_set rset;
+	
+	if(argc != 2){
+		printf("Usage: %s serverPort\n", argv[0]);
+		exit(1);
+	}
+	
+	nread=0;
+	while(argv[1][nread] != '\0' ){
+		if( (argv[1][nread] < '0') || (argv[1][nread] > '9') ){
+			printf("argomento non intero\n");
+			exit(2);
+		}
+		nread++;
+	}
+	port = atoi(argv[1]);
+
+	if (port < 1024 || port > 65535){
+		printf("%s = porta scorretta...\n", argv[2]);
+		exit(2);
+	}
 
 	memset((char *) &server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
@@ -73,8 +95,10 @@ int main(int argc, char **argv){
 			recvfrom(socket_udp, word, BUF_SIZE, 0, (struct sockaddr *) &client_addr, &client_addr_len);
 			printf("Elimino occorrenze di %s da file %s\n",word,file);
 
-			#if REP_STR_MMAP
+			#if defined REP_STR_MMAP
 			ris = replace_string_mmap(file, word);
+			#elif defined REP_STR_READ
+			ris = replace_string_read(file, word);
 			#else
 			ris = deleteOccurences(file, word);
 			#endif
@@ -143,7 +167,7 @@ int main(int argc, char **argv){
 								continue;
 							}
 
-							LOGD("%d\n", tmp_sizet);
+							LOGD("%ld\n", tmp_sizet);
 							msg_len = strlen(entry1_name) + 1;
 							/* keeping \0 */
 							memcpy(msg + tmp_sizet, entry1_name, msg_len);
@@ -283,6 +307,7 @@ inline int replace_string_mmap(char* file, char* word)
 	orig_fd = open(file, O_RDONLY);
 	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	orig_fd < 0 && die("lettura file, open", -100);
+	temp_fd < 0 && die("lettura file tmp, open", -100);
 
 	fstat(orig_fd, &s) < 0 && die("lettura file, fstat", -100);
 	size = s.st_size;
@@ -302,25 +327,23 @@ inline int replace_string_mmap(char* file, char* word)
 inline int replace_string_read(char* file, char* word)
 {
 	int orig_fd, temp_fd;
-	struct stat s;
-	size_t size;
-	char * mapped;
+	size_t word_len;
+	char buf[READ_BUF_SIZE];
 	char * temp_file = "tempfile";
 	int count = 0;
 
 	orig_fd = open(file, O_RDONLY);
 	temp_fd = open(temp_file, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	orig_fd < 0 && die("lettura file, open", -100);
+	temp_fd < 0 && die("lettura file, open", -100);
 
-	fstat(orig_fd, &s) < 0 && die("lettura file, fstat", -100);
-	size = s.st_size;
-
-	mapped = mmap(0, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, orig_fd, 0);
-	mapped == MAP_FAILED && die("mmap", -100);
-
-	multiple_strstr(mapped, size, word, strlen(word), temp_fd, &count);
+	word_len = strlen(word);
+	while (read(orig_fd, buf, READ_BUF_SIZE) > 0) {
+		multiple_strstr(buf, READ_BUF_SIZE, word, word_len, temp_fd, &count);
+		/* edge cases */
+		lseek(orig_fd, -word_len, SEEK_CUR);
+	}
 	
-	munmap(mapped, size);
 	close(orig_fd);
 	close(temp_fd);
 	rename(temp_file, file);

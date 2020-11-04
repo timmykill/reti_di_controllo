@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in servaddr;
 
 	if(argc!=3){
-		printf("Usage:%s serverAddress serverPort\n", argv[0]);
+		printf("Usage: %s serverAddress serverPort\n", argv[0]);
 		exit(1);
 	}
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	host = gethostbyname(argv[1]);
 
 	nread=0;
-	while( argv[2][nread]!= '\0' ){
+	while(argv[2][nread] != '\0' ){
 		if( (argv[2][nread] < '0') || (argv[2][nread] > '9') ){
 			printf("Secondo argomento non intero\n");
 			exit(2);

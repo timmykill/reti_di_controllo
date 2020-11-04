@@ -21,7 +21,7 @@ for loc in $LOC_TESTS; do
 done
 
 
-for CCARGS in '' '-DREP_STR_MMAP'; do
+for CCARGS in '' '-DREP_STR_MMAP' '-DREP_STR_READ'; do
 	export CCARGS
 	make purge > /dev/null 2>&1 
 	make test > /dev/null 2> logs/compilation_$CCARGS.log
@@ -36,13 +36,13 @@ for CCARGS in '' '-DREP_STR_MMAP'; do
 		for n_cli in $CLIENT_TESTS; do
 			cp files/$loc-orig.txt files/$loc.txt
 			#start server
-			logprefix="logs/server-$loc-$n_cli"
+			logprefix="logs/server-$CCARGS-$loc-$n_cli"
 			$REMBUF ./server $TEST_PORT 2> $logprefix-timings.log > $logprefix-stdout.log & 
 			echo $! > logs/server-$loc-$n_cli.pid 
 			echo '[+] server in funzione' 
 			
 			# udp
-			logprefix="logs/client_udp-$loc-$n_cli"
+			logprefix="logs/client_udp-$CCARGS-$loc-$n_cli"
 			rm -f $logprefix-{timings,stdout}.log 
 			for i in `seq 1 $n_cli`; do
 				echo -e "files/$loc.txt\n$PAROLA\n" | $REMBUF ./client_udp localhost $TEST_PORT 2>> $logprefix-timings.log > $logprefix-stdout.log &
