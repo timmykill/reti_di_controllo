@@ -1,46 +1,44 @@
-[+] server in funzione 100000 500 -DREP_STR_MMAP
+parole: 100000 client: 500 mmap
 222
 
-[+] server in funzione 100000 1000 -DREP_STR_MMAP
+parole: 100000 client: 1000 mmap
 653
 
-[+] server in funzione 100000 5000 -DREP_STR_MMAP
+parole: 100000 client: 5000 mmap
 4451
 
-[+] server in funzione 1000000 500 -DREP_STR_MMAP
+parole: 1000000 client: 500 mmap
 225
 
-[+] server in funzione 1000000 1000 -DREP_STR_MMAP
+parole: 1000000 client: 1000 mmap
 725
 
-[+] server in funzione 1000000 5000 -DREP_STR_MMAP
+parole: 1000000 client: 5000 mmap
 4726
 
-[+] server in funzione 1000000 300 -DREP_STR_MMAP
+parole: 1000000 client: 300 mmap
 25
 
-[+] server in funzione 1000000 300 -DREP_STR_MMAP
+parole: 1000000 client: 300 mmap
 25
 
-[+] server in funzione 100000 300 -DREP_STR_READ
+parole: 100000 client: 300 read 4k
 21
 
-[+] server in funzione 1000000 300 -DREP_STR_READ
+parole: 1000000 client: 300 read 4k
 25
 
-[+] server in funzione 100000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=8192
+parole: 100000 client: 300 read 8k
 22
 
-[+] server in funzione 1000000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=8192
+parole: 1000000 client: 300 read 8k
 25
 
-[+] server in funzione 100000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+parole: 100000 client: 300 read 16k
 21
 
-[+] server in funzione 1000000 200 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+parole: 1000000 client: 200 read 16k
 25
 
-[+] server in funzione 1000000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+parole: 1000000 client: 300 read 16k
 25
-
-
