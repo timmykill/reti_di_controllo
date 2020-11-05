@@ -14,9 +14,9 @@ int main(int argc, char **argv){
 
 	struct hostent *host;
 	struct sockaddr_in servaddr;
-	int  port, sd, num1, ris;
+	int  port, sd, num1, ris, word_len, file_len;
 	unsigned int len;
-	char nome_file[LINE_LENGTH], word[LINE_LENGTH];
+	char nome_file[LINE_LENGTH], word[LINE_LENGTH], buf[LINE_LENGTH * 2];
 	#ifdef TEST
 	struct timespec start, end;
 	#endif
@@ -70,24 +70,22 @@ int main(int argc, char **argv){
 
 	/* CORPO DEL CLIENT: ciclo di accettazione di richieste da utente */
 	printf("Inserire nome file: \n");
-	while ((scanf("%s", nome_file)) != EOF ){
+	while ((scanf("%s", buf)) != EOF ){
 		#ifdef TEST
 		save_time(&start);
 		#endif
 		/* richiesta operazione */
 		len = sizeof(servaddr);
-		if(sendto(sd, &nome_file, strlen(nome_file) + 1, 0, (struct sockaddr *)&servaddr, len) < 0){
-			perror("sendto");
-			continue;
-		}
+		file_len = strlen(buf);
 
 		printf("Inserire parola da eliminare:\n");
-		scanf("%s",word);//necessario controllo
-		if(sendto(sd, &word, strlen(word) + 1, 0, (struct sockaddr *)&servaddr, len) < 0){
+		scanf("%s", buf + file_len + 1);
+		word_len = strlen(buf + file_len + 1);
+		if(sendto(sd, buf, file_len + word_len + 2, 0, (struct sockaddr *)&servaddr, len) < 0){
 			perror("sendto");
 			continue;
 		}
-		LOGD("nome file: '%s'\nparola: '%s'\n", nome_file, word);;
+		LOGD("nome file: '%s'\nparola: '%s'\n", buf, buf + file_len + 1);;
 
 		/* ricezione del risultato */
 		printf("Attesa del risultato...\n");
@@ -105,7 +103,7 @@ int main(int argc, char **argv){
 		if(ris<0){
 			printf("File inesistente\n");
 		} else {
-			printf("%d occorrenze di %s eliminate da %s\n", ris, word, nome_file);
+			printf("%d occorrenze eliminate\n", ris);
 		}
 	}
 

@@ -86,5 +86,10 @@ int main(int argc, char *argv[])
 		shutdown(fd_socket, 0);
 		shutdown(fd_socket, 1);
 		close(fd_socket);
+
+		/* while testing scanf behaves weirdly, this helps */
+		#ifdef TEST
+		exit(1);	
+		#endif
 	}
 }

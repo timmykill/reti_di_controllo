@@ -1,0 +1,46 @@
+[+] server in funzione 100000 500 -DREP_STR_MMAP
+222
+
+[+] server in funzione 100000 1000 -DREP_STR_MMAP
+653
+
+[+] server in funzione 100000 5000 -DREP_STR_MMAP
+4451
+
+[+] server in funzione 1000000 500 -DREP_STR_MMAP
+225
+
+[+] server in funzione 1000000 1000 -DREP_STR_MMAP
+725
+
+[+] server in funzione 1000000 5000 -DREP_STR_MMAP
+4726
+
+[+] server in funzione 1000000 300 -DREP_STR_MMAP
+25
+
+[+] server in funzione 1000000 300 -DREP_STR_MMAP
+25
+
+[+] server in funzione 100000 300 -DREP_STR_READ
+21
+
+[+] server in funzione 1000000 300 -DREP_STR_READ
+25
+
+[+] server in funzione 100000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=8192
+22
+
+[+] server in funzione 1000000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=8192
+25
+
+[+] server in funzione 100000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+21
+
+[+] server in funzione 1000000 200 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+25
+
+[+] server in funzione 1000000 300 -DREP_STR_READ_-DMANUAL_READ_BUF_SIZE_-DREAD_BUF_SIZE=16384
+25
+
+

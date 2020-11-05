@@ -6,9 +6,6 @@ TARGETS = server client_tcp client_udp
 shared_objects = shared.o
 CFLAGS += ${CCARGS} ${DECLARED}
 
-test: CFLAGS += -DTEST
-test: $(TARGETS)
-
 all: $(TARGETS)
 
 $(TARGETS): %: %.o $(shared_objects) 
@@ -19,7 +16,6 @@ $(TARGETS): %: %.o $(shared_objects)
 
 clean:
 	rm -f *.o
-	rm filetemp
 
 purge: clean
 	rm $(TARGETS)
