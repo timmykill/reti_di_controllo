@@ -1,7 +1,7 @@
 CC = gcc
 LINK = 
 CFLAGS = -g -Wpedantic -Wall -Wextra -Wno-unused-value -Wno-unused-parameter -O2 -Wno-unused-result 
-DECLARED = -DSHOW_LV1_DIR -DSHOW_LV1_ENTRIES
+DECLARED = -DMANUAL_READ_BUF_SIZE -DREAD_BUF_SIZE=16384 -DREP_STR_READ
 TARGETS = server client_tcp client_udp   
 shared_objects = shared.o
 CFLAGS += ${CCARGS} ${DECLARED}
