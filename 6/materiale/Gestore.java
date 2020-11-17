@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,11 +9,13 @@ import java.rmi.RemoteException;
 
 public class Gestore implements Serializable {
 
+	private static final long serialVersionUID = 4765226555089932014L;
+
 	public Gestore() {
 		super();
 	}
 
-	public synchronized int conta(String nomeFile, int n) throws IOException {
+	public int conta(String nomeFile, int n) throws IOException {
 		int result = 0;
 
 		BufferedReader buff = new BufferedReader(new FileReader(nomeFile));

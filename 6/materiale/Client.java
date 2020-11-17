@@ -8,19 +8,24 @@ class Client {
 	public static void main(String[] args) {
 
 		final int REGISTRYPORT = 1099;
+		int registryPort = 0;
 		String registryHost = null;
-		String serviceName = "ServerCongresso";
+		String serviceName = "Server";
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
 		// Controllo dei parametri della riga di comando
-		if (args.length != 1) {
-			System.out.println("Sintassi: ServerCongresso NomeHost");
+		if(args.length == 2) {
+			registryPort = Integer.parseInt(args[1]);
+		}else if(args.length == 1) {
+			registryPort = REGISTRYPORT;
+		}else {
+			System.out.println("Sintassi: Client NomeHost [registryPort]");
 			System.exit(1);
 		}
 		registryHost = args[0];
 
 		try {
-			String completeName = "//" + registryHost + ":" + REGISTRYPORT + "/" + serviceName;
+			String completeName = "//" + registryHost + ":" + registryPort + "/" + serviceName;
 			RemOp serverRMI = (RemOp) Naming.lookup(completeName);
 			System.out.println("ClientRMI: Servizio \"" + serviceName + "\" connesso");
 
@@ -31,7 +36,7 @@ class Client {
 
 			while ((service = stdIn.readLine()) != null) {
 
-				if (service.equals("C")) {
+				if (service.equalsIgnoreCase("C")) {
 
 					System.out.print("Nome file: ");
 					String file = stdIn.readLine();
@@ -54,7 +59,7 @@ class Client {
 					System.out.println("Il numero di righe con piu di " + g + "parole e: " + r);
 				}
 
-				else if (service.equals("E")) {
+				else if (service.equalsIgnoreCase("E")) {
 					System.out.print("Nome file: ");
 					String file = stdIn.readLine();
 

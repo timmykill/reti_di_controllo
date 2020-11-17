@@ -6,6 +6,7 @@ import java.rmi.server.*;
 
 public class Server extends UnicastRemoteObject implements RemOp {
 
+	private static final long serialVersionUID = -2740891578873754123L;
 	static Gestore gestore;
 
 	public Server() throws RemoteException {
@@ -44,14 +45,24 @@ public class Server extends UnicastRemoteObject implements RemOp {
 	}
 
 	public static void main(String[] args) {
+		
 		gestore = new Gestore();
-
+		int registryPort = 0;
 		final int REGISTRYPORT = 1099;
 		String registryHost = "localhost";
-		String serviceName = "ServerCongresso";
+		String serviceName = "Server";
+		
+		if(args.length == 1) {
+			registryPort = Integer.parseInt(args[0]);
+		}else if(args.length == 0) {
+			registryPort = REGISTRYPORT;
+		}else {
+			System.out.println("Sintassi: Server [registryPort]");
+			System.exit(1);
+		}
 
 		// Registrazione del servizio RMI
-		String completeName = "//" + registryHost + ":" + REGISTRYPORT + "/" + serviceName;
+		String completeName = "//" + registryHost + ":" + registryPort + "/" + serviceName;
 		try {
 			Server serverRMI = new Server();
 			Naming.rebind(completeName, serverRMI);
