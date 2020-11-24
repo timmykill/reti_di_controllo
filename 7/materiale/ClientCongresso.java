@@ -18,7 +18,7 @@ class ClientCongresso{
 		//String serviceName = "ServerCongresso";
 		//String serviceTag = "Congresso";
 		String serviceName = null;
-		String serviceTag = null;
+		String serviceTag = "Congresso";
 		String[] services=null;
 		BufferedReader stdIn =new BufferedReader(new InputStreamReader(System.in));
 		
@@ -43,14 +43,11 @@ class ClientCongresso{
 				registryRemotoName;
 			RegistryRemotoTagClient registryRemoto = (RegistryRemotoTagClient)
 				Naming.lookup(completeRemoteRegistryName);
-			do {
-				System.out.println("Inserire il tag del servizio richiesto:");
-				serviceTag=stdIn.readLine();
-				if(serviceTag==null)
-					System.exit(1);
-				services=(String[]) registryRemoto.cercaTag(serviceTag);
-			}while(services==null);
+			services=(String[]) registryRemoto.cercaTag(serviceTag);
+			if(services==null || services.length==0|| services[0]==null)
+				System.exit(1);
 			serviceName=services[0];
+			System.out.println("Mi connetto al server: "+serviceName);
 			ServerCongresso serverRMI =(ServerCongresso) registryRemoto.cerca(serviceName);
 			if(!serviceTag.equals("Congresso")) {
 				System.out.println(services.length+" servizi trovati per il tag "+serviceTag);
@@ -82,7 +79,7 @@ class ClientCongresso{
 				String speak = stdIn.readLine();
 				// Parametri corretti, invoco il servizio remoto
 				if (serverRMI. registrazione (g, sess, speak)==0)
-					System.out.println("Registrazione di …");
+					System.out.println("Registrazione dello speaker "+speak+" nella giornata "+g+", sessione "+sess);
 				else System.out.println("Registrazione non effettuata");
 			}
 		else if (service.equals("P")){ 
@@ -102,7 +99,7 @@ class ClientCongresso{
 		} // Operazione P
 		else 
 			System.out.println("Servizio non disponibile");
-		System.out.print("Servizio (R=Registrazione, …");
+		System.out.print("Servizio(R=Registrazione, P=Programma): ");
 		} // while
 		}catch(Exception e) {e.printStackTrace();}
 	}

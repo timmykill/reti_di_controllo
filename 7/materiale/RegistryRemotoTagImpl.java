@@ -176,6 +176,15 @@ public class RegistryRemotoTagImpl extends UnicastRemoteObject implements Regist
 				return true;
 		return false;
 	}
+	
+	private boolean giaPresente(String[] tags, String tag) {
+		for(int i=0;i<tags.length;i++) {
+			if(tags[i].equals(tag))
+				return true;
+		
+		}
+		return false;
+	}
 	//aggiunge il tag specificato alla lista di tag associata al nome logico(possono esserci piu nomi logici uguali)
 	@Override
 	public synchronized boolean associaTag(String nome_logico_server, String tag) throws RemoteException {
@@ -195,17 +204,18 @@ public class RegistryRemotoTagImpl extends UnicastRemoteObject implements Regist
 					fatto=true;
 					this.table[i][2]=newtags;
 				}
-				else {
+				else{
 					tmptags=(String[]) this.table[i][2];
-	 				newtags=new String[tmptags.length+1];
-	 				for(int j=0;j<tmptags.length;j++) {
-	 					newtags[j]=tmptags[j];
-	 				}
-	 				newtags[tmptags.length]=tag;
-	 				fatto=true;
-	 				this.table[i][2]=newtags;
+					if(!this.giaPresente(tmptags,tag)) {
+						newtags=new String[tmptags.length+1];
+		 				for(int j=0;j<tmptags.length;j++) {
+		 					newtags[j]=tmptags[j];
+		 				}
+		 				newtags[tmptags.length]=tag;
+		 				fatto=true;
+		 				this.table[i][2]=newtags;
+					}
 				}
-				
 			}
 		}
 		if(fatto)
@@ -225,7 +235,7 @@ public class RegistryRemotoTagImpl extends UnicastRemoteObject implements Regist
 		System.out.println("Ecco il contenuto aggiornato del registry:\n");
 		for(int i=0;i<this.tableSize;i++) {
 			if(this.table[i][0]!=null) {
-				System.out.println("Nome logico n."+(i+1)+(String)this.table[i][0]+
+				System.out.println("Nome logico n."+(i+1)+": "+(String)this.table[i][0]+
 						((this.table[i][2]!=null)?", con tag:\n "+stampaTag((String[])table[i][2]):""));
 			}
 		}

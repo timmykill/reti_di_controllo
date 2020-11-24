@@ -14,7 +14,8 @@ public class ServerCongressoImpl extends UnicastRemoteObject implements ServerCo
 	//registrazione
 	public int registrazione (int giorno, String sessione, String speaker) throws RemoteException{
 		int numSess = -1;
-		System.out.println("Server RMI: richiesta registrazione:");
+		System.out.println("Server RMI: richiesta registrazione nel giorno "+giorno+
+				", sessione "+sessione+" dello speaker "+speaker);
 		for(int i=0;i<12;i++) {
 			if(sessione.equals("S"+(i+1))) {
 				numSess=i;
@@ -38,7 +39,7 @@ public class ServerCongressoImpl extends UnicastRemoteObject implements ServerCo
 			
 
 	public static void main(String[] args) {
-		Programma[] prog = new Programma[3]; // creazione programma
+		prog = new Programma[3]; // creazione programma
 		for (int i = 0; i < 3; i++) prog[i] = new Programma();
 		int registryRemotoPort = 1099; // default
 		String registryRemotoName = "RegistryRemoto";
