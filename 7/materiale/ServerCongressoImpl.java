@@ -46,11 +46,12 @@ public class ServerCongressoImpl extends UnicastRemoteObject implements ServerCo
 		String serviceName = "ServerCongresso";
 		String serviceTag="Congresso";
 		if (args.length != 1 && args.length != 2) {
-			//controlli
+			System.out.println("Usage: registryRemotoName [registryRemotoPort]");
+			System.exit(1);
 		} // Controllo argomenti
 		String registryRemotoHost = args[0];
 		if (args.length == 2)
-		{ try { registryRemotoPort = Integer.parseInt(args[0]); }
+		{ try { registryRemotoPort = Integer.parseInt(args[1]); }
 		catch (Exception e) {e.printStackTrace();} 
 		} // if
 		// Registrazione servizio presso RegistryRemoto
