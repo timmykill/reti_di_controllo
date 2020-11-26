@@ -1,7 +1,9 @@
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RMISecurityManager;
 
+@SuppressWarnings("deprecation")
 public class ServerCongressoImpl extends UnicastRemoteObject implements ServerCongresso{
 
 	private static final long serialVersionUID = 1L;
@@ -54,6 +56,13 @@ public class ServerCongressoImpl extends UnicastRemoteObject implements ServerCo
 		{ try { registryRemotoPort = Integer.parseInt(args[1]); }
 		catch (Exception e) {e.printStackTrace();} 
 		} // if
+		
+		
+	    // Impostazione del SecurityManager
+	    if (System.getSecurityManager() == null) {
+	      System.setSecurityManager(new RMISecurityManager());
+	    }
+		
 		// Registrazione servizio presso RegistryRemoto
 		String completeRemoteRegistryName = "//"+registryRemotoHost+
 				":"+registryRemotoPort+"/"+registryRemotoName;

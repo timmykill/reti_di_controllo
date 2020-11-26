@@ -1,6 +1,9 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
+
+@SuppressWarnings("deprecation")
 
 
 
@@ -30,9 +33,14 @@ class ClientCongresso{
 		String registryRemotoHost = args[0];
 		if (args.length == 2){ 
 			try {
-				registryRemotoPort = Integer.parseInt(args[0]); 
+				registryRemotoPort = Integer.parseInt(args[1]); 
 			}catch (Exception e) {e.printStackTrace();}
 		}
+		
+			
+		// 	Impostazione del SecurityManager
+		if (System.getSecurityManager() == null)
+			System.setSecurityManager(new RMISecurityManager());
 		
 		
 		// Recupero il riferimento al servizio remoto presso il RegistryRemoto
@@ -49,10 +57,6 @@ class ClientCongresso{
 			serviceName=services[0];
 			System.out.println("Mi connetto al server: "+serviceName);
 			ServerCongresso serverRMI =(ServerCongresso) registryRemoto.cerca(serviceName);
-			if(!serviceTag.equals("Congresso")) {
-				System.out.println(services.length+" servizi trovati per il tag "+serviceTag);
-				System.exit(1);
-			}
 		System.out.println("\nRichieste a EOF");
 		System.out.print("Servizio(R=Registrazione, P=Programma): ");
 		String service; boolean ok;

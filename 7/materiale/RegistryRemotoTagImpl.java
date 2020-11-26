@@ -1,8 +1,10 @@
 import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+@SuppressWarnings("deprecation")
 public class RegistryRemotoTagImpl extends UnicastRemoteObject implements RegistryRemotoTagServer{ 
 	/**
 	 * 
@@ -123,6 +125,10 @@ public class RegistryRemotoTagImpl extends UnicastRemoteObject implements Regist
 		{ try {registryRemotoPort =Integer.parseInt(args[0]); }
 		catch (Exception e) {e.printStackTrace();}
 		}
+		
+		if (System.getSecurityManager() == null)
+			System.setSecurityManager(new RMISecurityManager());
+		
 		// Registrazione RegistryRemoto presso rmiregistry locale
 		String completeName = "//" + registryRemotoHost + ":" +
 				registryRemotoPort + "/" + registryRemotoName;

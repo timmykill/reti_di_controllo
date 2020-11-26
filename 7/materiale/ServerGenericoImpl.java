@@ -1,13 +1,16 @@
 import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+@SuppressWarnings("deprecation")
 public class ServerGenericoImpl extends UnicastRemoteObject implements ServerGenerico{
 	
 	private static final long serialVersionUID = 1L;
 	
 	// Costruttore
 	public ServerGenericoImpl()throws RemoteException {super(); }
+
 
 	public static void main(String[] args) {
 		int registryRemotoPort = 1099; // default
@@ -29,6 +32,11 @@ public class ServerGenericoImpl extends UnicastRemoteObject implements ServerGen
 			serviceName = args[1];
 			serviceTag = args[2];
 		}
+		
+		if (System.getSecurityManager() == null) {
+		      System.setSecurityManager(new RMISecurityManager());
+		    }
+		
 		// Registrazione servizio presso RegistryRemoto
 		String completeRemoteRegistryName = "//"+registryRemotoHost+
 				":"+registryRemotoPort+"/"+registryRemotoName;
