@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include "scan.h"
-
+#ifdef DEBUG
+#include "shared.h"
+#endif
 int main(int argc,char **argv){
 	CLIENT *c;
 	File_input f_in;
@@ -36,7 +38,15 @@ int main(int argc,char **argv){
 		}
 		if(tmp == 'F'){
 			strcpy(f_in.file, path);
+			#ifdef DEBUG
+			struct timespec start, end;
+			save_time(&start);
+			#endif
 			f_out = file_scan_1(&f_in,c);
+			#ifdef DEBUG
+			save_time(&end);
+			print_delta(start, end);
+			#endif
 			if(f_out == NULL){
 				clnt_perror(c, server); exit(1);
 			}

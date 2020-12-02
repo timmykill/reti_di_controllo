@@ -8,33 +8,35 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef DEBUG
+#define BUFFLEN 1
+#endif
 File_res *file_scan_1_svc(File_input * input, struct svc_req * rq){
 	static File_res result;
-	int fd;
-	char separators[] = {' ','\n'};
-	char tmp;
+	int fd, nread;
+	char separators[] = {' ', '\n', '.', ',','\0'};
+	char buff[BUFFLEN];
 	result.chars = 0;
 	result.words = 0;
 	result.lines = 0;
-
+	printf("richiesta accettata...\n");
 	if((fd = open(input->file,O_RDONLY)) == -1){
 		result.chars = -1;
 		result.lines = errno;
 		return &result;
 	}
 
-	while(read(fd, &tmp,sizeof(char)) > 0){
-		result.chars++;
-	
-		if(tmp == '\n'){
-			result.lines++;
-		}
+	while((nread = read(fd, buff, BUFFLEN)) > 0){
+		for(int i = 0; i < nread; i++){
+			char tmp = buff[i];
+			result.words = (strchr(separators, tmp) != NULL)?(result.words + 1):result.words;
+			result.chars++;
+			result.lines = (buff[i] == '\n')?(result.lines + 1):result.lines;
 
-		if(strchr(separators, tmp) != NULL){
-			result.words++;
 		}
-		
 	}
+	printf("...richiesta servita\n");
 	close(fd);
 	return &result;
 }
@@ -46,7 +48,7 @@ int * dir_scan_1_svc(Dir_input * input, struct svc_req * rq){
 	int fd;
 	struct dirent *entry;
 	char path[MAXLENDIR+257];//alloco abbastanza spazio per contenere il path per dir + / + nome file(max 256)
-	
+	printf("richiesta su directory ricevuta...\n");
 	if((dir = opendir(input->dir)) == NULL){
 		result = -1;
 		return (&result);
@@ -58,5 +60,6 @@ int * dir_scan_1_svc(Dir_input * input, struct svc_req * rq){
 			close(fd);
 		}
 	}
+	printf("...richiesta su directory servita\n");
 	return (&result);	
 }
