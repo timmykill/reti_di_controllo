@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "scan.h"
+#define LINE 256
 #ifdef DEBUG
 #include "shared.h"
 #endif
@@ -10,7 +11,7 @@ int main(int argc,char **argv){
 	File_res *f_out;
 	Dir_input d_in;
 	int *d_out;
-	char tmp, pathfile[MAXLENFILE], pathdir[MAXLENDIR];
+	char tmp[LINE], pathfile[MAXLENFILE], pathdir[MAXLENDIR];
 	char *server;
 	if(argc !=2){
 		printf("bad arguments, usage: client server");
@@ -22,26 +23,10 @@ int main(int argc,char **argv){
 		clnt_pcreateerror(server);
 		exit(1);
 	}
-
-	while(TRUE){
-		printf("insert 'F' for file_scan or 'D' for dir_scan, then the file/directory path\n");
-		tmp = getchar();
-		if(tmp == '\n'){
-			continue;
-		}
-		while(getchar() != '\n');
-		if(tmp != 'F' && tmp != 'D'){
-			if(tmp == EOF){
-				clnt_destroy(c);
-				printf("See you...\n");
-				return 0;
-			}
-			printf("not a valid char, try again\n");
-			continue;
-		}
-
+	printf("insert 'F' for file_scan or 'D' for dir_scan, then the file/directory path\n");
+	while(gets(tmp)){
 		printf("insert the path(max 2190 for files, 2186 for directories)\n");
-		if(tmp == 'F'){
+		if(strcmp(tmp, "F") == 0){
 			if(!(gets(pathfile))){
 				break;
 			}
@@ -64,7 +49,7 @@ int main(int argc,char **argv){
 				exit(1);
 			}
 			printf("chars: %d, words: %d, lines: %d\n",f_out->chars,f_out->words,f_out->lines);
-		}else{
+		}else if(strcmp(tmp, "D") == 0){
 			if(!(gets(pathdir))){
 				break;
 			}
@@ -82,6 +67,7 @@ int main(int argc,char **argv){
 			}
 			printf("%d files sopra soglia\n",(*d_out));
 		}
+		printf("insert 'F' for file_scan or 'D' for dir_scan, then the file/directory path\n");
 	}
 	clnt_destroy(c);
 	printf("See you...\n");
