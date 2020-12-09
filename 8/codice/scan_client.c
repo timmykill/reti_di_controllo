@@ -10,7 +10,7 @@ int main(int argc,char **argv){
 	File_res *f_out;
 	Dir_input d_in;
 	int *d_out;
-	char tmp, path[MAXLENFILE];
+	char tmp, pathfile[MAXLENFILE], pathdir[MAXLENDIR];
 	char *server;
 	if(argc !=2){
 		printf("bad arguments, usage: client server");
@@ -22,22 +22,30 @@ int main(int argc,char **argv){
 		clnt_pcreateerror(server);
 		exit(1);
 	}
-	do{
+
+	while(TRUE){
 		printf("insert 'F' for file_scan or 'D' for dir_scan, then the file/directory path\n");
-		if((tmp = getchar()) == EOF){
-			break;
-		}
-		getchar();
-		if(tmp != 'F' && tmp != 'D'){
-			printf("not a valid char\n");
+		tmp = getchar();
+		if(tmp == '\n'){
 			continue;
 		}
-		printf("insert the path(max 2190 for files, 2186 for directories)\n");
-		if(!(gets(path))){
-			break;
+		while(getchar() != '\n');
+		if(tmp != 'F' && tmp != 'D'){
+			if(tmp == EOF){
+				clnt_destroy(c);
+				printf("See you...\n");
+				return 0;
+			}
+			printf("not a valid char, try again\n");
+			continue;
 		}
+
+		printf("insert the path(max 2190 for files, 2186 for directories)\n");
 		if(tmp == 'F'){
-			strcpy(f_in.file, path);
+			if(!(gets(pathfile))){
+				break;
+			}
+			strcpy(f_in.file, pathfile);
 			#ifdef DEBUG
 			struct timespec start, end;
 			save_time(&start);
@@ -57,10 +65,13 @@ int main(int argc,char **argv){
 			}
 			printf("chars: %d, words: %d, lines: %d\n",f_out->chars,f_out->words,f_out->lines);
 		}else{
+			if(!(gets(pathdir))){
+				break;
+			}
 			printf("insert an int\n");
 			scanf("%d",&(d_in.soglia));
 			getchar();
-			strcpy(d_in.dir, path);
+			strcpy(d_in.dir, pathdir);
 			d_out = dir_scan_1(&d_in,c);
 			if(d_out == NULL){
 				clnt_perror(c, server); exit(1);
@@ -71,8 +82,9 @@ int main(int argc,char **argv){
 			}
 			printf("%d files sopra soglia\n",(*d_out));
 		}
-	}while(TRUE);
+	}
 	clnt_destroy(c);
 	printf("See you...\n");
+	return 0;
 }
 

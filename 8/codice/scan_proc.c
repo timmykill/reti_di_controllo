@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #ifndef DEBUG
-#define BUFFLEN 1
+#define BUFFLEN 16384
 #endif
 File_res *file_scan_1_svc(File_input * input, struct svc_req * rq){
 	static File_res result;

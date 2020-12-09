@@ -1,8 +1,8 @@
 #! /bin/bash
 echo "da scan.x genero stubs, poi compilo...";
 rpcgen scan.x;
-gcc scan_client.c scan_clnt.c scan_xdr.c -o client 2> /dev/null;
-gcc scan_svc.c scan_proc.c scan_xdr.c -o server;
+gcc scan_client.c scan_clnt.c scan_xdr.c -g -o client 2> /dev/null;
+gcc scan_svc.c scan_proc.c scan_xdr.c -g -o server;
 echo "-b per test buffer, -u per test udp"
 
 
